@@ -115,20 +115,18 @@ const StudentProfile = () => {
     if (window.confirm(`Send a reminder email to ${student.name} (${student.email})?`)) {
       try {
         setSendingReminder(true);
-        const response = await axios.post(`${API_BASE_URL}/students/inactivity/check`);
+        const response = await axios.post(`${API_BASE_URL}/students/${id}/send-reminder`);
         
-        // Check if the reminder was sent to this specific student
-        const studentResult = response.data.results.find(result => result.studentId === student._id);
-        
-        if (studentResult) {
+        if (response.status === 200) {
           alert(`Reminder sent successfully to ${student.name}!`);
           await fetchStudentData(); // Refresh to update reminder count
         } else {
-          alert('No reminder was sent. This might be because:\n- Student is not inactive (7+ days)\n- Reminder was sent recently\n- Email reminders are disabled');
+          alert('Failed to send reminder email.');
         }
       } catch (err) {
         console.error('Error sending reminder:', err);
-        alert('Failed to send reminder email. Please check the console for details.');
+        const errorMessage = err.response?.data?.message || 'Failed to send reminder email';
+        alert(`Error: ${errorMessage}`);
       } finally {
         setSendingReminder(false);
       }

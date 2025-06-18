@@ -64,9 +64,7 @@ const studentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-studentSchema.index({ codeforcesHandle: 1 });
-studentSchema.index({ email: 1 });
-studentSchema.index({ lastSubmissionDate: 1 }); // For inactivity queries
+// Index for inactivity queries
+studentSchema.index({ lastSubmissionDate: 1 });
 
 module.exports = mongoose.model('Student', studentSchema); 
