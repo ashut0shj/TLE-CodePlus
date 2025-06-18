@@ -14,7 +14,8 @@ const {
   getInactivityStatistics,
   getTopReminderStudentsList,
   triggerInactivityCheckManual,
-  sendManualReminder
+  sendManualReminder,
+  getSubmissionHeatmap
 } = require('../controllers/studentController');
 
 // Get all students
@@ -51,7 +52,7 @@ router.patch('/:id/reminders', toggleEmailReminders);
 router.get('/:studentId/contests', getStudentContestHistory);
 
 // Get student problem solving data
-router.get('/:studentId/problems', getStudentProblemData);
+router.get('/:id/problems', getProblemData);
 
 // Refresh Codeforces data for a student
 router.post('/:id/refresh', refreshStudentData);
@@ -61,5 +62,8 @@ router.post('/trigger-inactivity-check', triggerInactivityCheckManual);
 
 // Send manual reminder to specific student
 router.post('/:id/send-reminder', sendManualReminder);
+
+// Get submission heatmap data for a student
+router.get('/:id/heatmap', getSubmissionHeatmap);
 
 module.exports = router; 

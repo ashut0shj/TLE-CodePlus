@@ -59,6 +59,11 @@ const studentSchema = new mongoose.Schema({
   emailRemindersDisabled: {
     type: Boolean,
     default: false
+  },
+  // Data freshness tracking
+  lastDataSync: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true

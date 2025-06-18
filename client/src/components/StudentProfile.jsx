@@ -19,6 +19,8 @@ const StudentProfile = () => {
   const [problemFilter, setProblemFilter] = useState(90);
   const [refreshing, setRefreshing] = useState(false);
   const [sendingReminder, setSendingReminder] = useState(false);
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [heatmapLoading, setHeatmapLoading] = useState(false);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -60,6 +62,23 @@ const StudentProfile = () => {
     }
   }, [id, problemFilter, API_BASE_URL]);
 
+  const fetchHeatmapData = useCallback(async () => {
+    try {
+      setHeatmapLoading(true);
+      // Get data from beginning of current year to now for comprehensive heatmap
+      const currentYear = new Date().getFullYear();
+      const startOfYear = new Date(currentYear, 0, 1); // January 1st of current year
+      const daysFromStartOfYear = Math.ceil((new Date() - startOfYear) / (1000 * 60 * 60 * 24));
+      
+      const response = await axios.get(`${API_BASE_URL}/students/${id}/heatmap?days=${daysFromStartOfYear}`);
+      setHeatmapData(response.data);
+    } catch (err) {
+      console.error('Error fetching heatmap data:', err);
+    } finally {
+      setHeatmapLoading(false);
+    }
+  }, [id, API_BASE_URL]);
+
   useEffect(() => {
     fetchStudentData();
   }, [fetchStudentData]);
@@ -68,8 +87,9 @@ const StudentProfile = () => {
     if (student) {
       fetchContestHistory();
       fetchProblemData();
+      fetchHeatmapData();
     }
-  }, [student, fetchContestHistory, fetchProblemData]);
+  }, [student, fetchContestHistory, fetchProblemData, fetchHeatmapData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -82,6 +102,7 @@ const StudentProfile = () => {
       await fetchStudentData();
       await fetchContestHistory();
       await fetchProblemData();
+      await fetchHeatmapData();
       
       alert('Codeforces data refreshed successfully!');
     } catch (err) {
@@ -147,6 +168,23 @@ const StudentProfile = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const formatDataFreshness = (lastDataSync) => {
+    if (!lastDataSync) return 'Never';
+    
+    const now = new Date();
+    const lastSync = new Date(lastDataSync);
+    const diffInHours = Math.floor((now - lastSync) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return '1 day ago';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    
+    return formatDate(lastDataSync);
+  };
+
   const getInactivityStatus = (lastSubmissionDate) => {
     if (!lastSubmissionDate) return { status: 'unknown', color: 'text-gray-500', text: 'Unknown' };
     
@@ -178,15 +216,7 @@ const StudentProfile = () => {
   };
 
   const prepareHeatmapData = () => {
-    const heatmapData = {};
-    problems.forEach(problem => {
-      const date = new Date(problem.solvedDate).toISOString().split('T')[0];
-      heatmapData[date] = (heatmapData[date] || 0) + 1;
-    });
-    return Object.entries(heatmapData).map(([date, count]) => ({
-      date,
-      count
-    }));
+    return heatmapData;
   };
 
   if (loading) {
@@ -265,6 +295,12 @@ const StudentProfile = () => {
             <span className="font-medium">Last Activity:</span> 
             <span className={`ml-2 font-semibold ${inactivityStatus.color}`}>
               {student.lastSubmissionDate ? formatDate(student.lastSubmissionDate) : 'Unknown'}
+            </span>
+          </div>
+          <div>
+            <span className="font-medium">Data Last Updated:</span> 
+            <span className={`ml-2 font-semibold ${student.lastDataSync ? 'text-green-600' : 'text-red-600'}`}>
+              {formatDataFreshness(student.lastDataSync)}
             </span>
           </div>
         </div>
@@ -390,10 +426,21 @@ const StudentProfile = () => {
             onChange={(e) => setProblemFilter(e.target.value)}
             className="px-3 py-1 border border-gray-300 rounded-md"
           >
+            <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
             <option value={90}>Last 90 days</option>
             <option value={365}>Last year</option>
           </select>
+        </div>
+
+        {/* Filter Summary */}
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="text-sm text-gray-600">
+            Showing data for the last <span className="font-semibold">{problemFilter} days</span>
+            {problems.length > 0 && (
+              <span> • <span className="font-semibold">{problems.length} problems</span> solved</span>
+            )}
+          </div>
         </div>
 
         {problemLoading ? (
@@ -424,37 +471,91 @@ const StudentProfile = () => {
               </div>
             </div>
 
+            {/* Most Difficult Problem Details */}
+            {statistics.mostDifficultProblem && (
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
+                <h4 className="font-semibold text-orange-800 mb-2">🏆 Most Difficult Problem Solved</h4>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <a
+                      href={`https://codeforces.com/problemset/problem/${statistics.mostDifficultProblem.contestId}/${statistics.mostDifficultProblem.problemIndex}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      {statistics.mostDifficultProblem.problemName}
+                    </a>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Solved on {formatDate(statistics.mostDifficultProblem.solvedDate)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {statistics.mostDifficultProblem.rating}
+                    </div>
+                    <div className="text-sm text-gray-600">Rating</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Rating Distribution Chart */}
             {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 && (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={prepareRatingBucketsData()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="bucket" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Rating Distribution</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={prepareRatingBucketsData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="bucket" 
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value, name) => [value, 'Problems']}
+                        labelFormatter={(label) => `Rating ${label}`}
+                      />
+                      <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             )}
 
             {/* Activity Heatmap */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">Activity Heatmap</h3>
-              <CalendarHeatmap
-                startDate={new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)}
-                endDate={new Date()}
-                values={prepareHeatmapData()}
-                classForValue={(value) => {
-                  if (!value) return 'color-empty';
-                  return `color-scale-${Math.min(value.count, 4)}`;
-                }}
-                titleForValue={(value) => {
-                  if (!value) return 'No activity';
-                  return `${value.count} problem${value.count === 1 ? '' : 's'} solved on ${value.date}`;
-                }}
-              />
+              <h3 className="text-lg font-semibold mb-3">
+                Activity Heatmap ({new Date().getFullYear()})
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                📅 Shows all activity from the beginning of {new Date().getFullYear()}. 
+                Statistics above are filtered by the selected time period.
+              </p>
+              {heatmapLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : heatmapData.length > 0 ? (
+                <CalendarHeatmap
+                  startDate={new Date(new Date().getFullYear(), 0, 1)}
+                  endDate={new Date()}
+                  values={prepareHeatmapData()}
+                  classForValue={(value) => {
+                    if (!value) return 'color-empty';
+                    return `color-scale-${Math.min(value.count, 4)}`;
+                  }}
+                  titleForValue={(value) => {
+                    if (!value) return 'No activity';
+                    return `${value.count} problem${value.count === 1 ? '' : 's'} solved on ${value.date}`;
+                  }}
+                />
+              ) : (
+                <p className="text-gray-500 text-center py-8">No activity data available for the heatmap.</p>
+              )}
             </div>
 
             {/* Problems Table */}

@@ -5,6 +5,7 @@ const axios = require('axios');
 const { updateLastSubmissionDate } = require('../services/inactivityService');
 const { getInactivityStats, getTopReminderStudents } = require('../services/inactivityService');
 const { triggerInactivityCheck } = require('../cron/inactivityCron');
+const mongoose = require('mongoose');
 
 // Get all students
 const getAllStudents = async (req, res) => {
@@ -262,52 +263,73 @@ const getStudentContestHistory = async (req, res) => {
   }
 };
 
-// Get student problem solving data
-const getStudentProblemData = async (req, res) => {
+// Get problem solving data for a student
+const getProblemData = async (req, res) => {
   try {
-    const { studentId } = req.params;
+    const { id } = req.params;
     const { days = 90 } = req.query;
-
+    
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(days));
-
+    
+    // Get problems within the date range
     const problems = await Problem.find({
-      studentId,
-      solvedDate: { $gte: startDate },
-      verdict: 'OK'
-    })
-    .sort({ solvedDate: -1 });
+      studentId: id,
+      solvedDate: { $gte: startDate }
+    }).sort({ solvedDate: -1 });
+
+    if (problems.length === 0) {
+      return res.json({
+        problems: [],
+        statistics: {
+          totalProblems: 0,
+          averageRating: 0,
+          averageProblemsPerDay: 0,
+          mostDifficultProblem: null,
+          ratingBuckets: {}
+        }
+      });
+    }
 
     // Calculate statistics
     const totalProblems = problems.length;
-    const averageRating = problems.length > 0 
-      ? problems.reduce((sum, p) => sum + (p.rating || 0), 0) / problems.length 
+    const problemsWithRating = problems.filter(p => p.rating);
+    const averageRating = problemsWithRating.length > 0 
+      ? Math.round(problemsWithRating.reduce((sum, p) => sum + p.rating, 0) / problemsWithRating.length)
       : 0;
-    const averageProblemsPerDay = problems.length > 0 
-      ? problems.length / parseInt(days) 
-      : 0;
-    const mostDifficultProblem = problems.length > 0 
-      ? problems.reduce((max, p) => (p.rating || 0) > (max.rating || 0) ? p : max)
+    
+    const daysDiff = Math.ceil((new Date() - startDate) / (1000 * 60 * 60 * 24));
+    const averageProblemsPerDay = daysDiff > 0 ? (totalProblems / daysDiff).toFixed(2) : 0;
+    
+    // Find most difficult problem
+    const mostDifficultProblem = problemsWithRating.length > 0 
+      ? problemsWithRating.reduce((max, p) => p.rating > max.rating ? p : max)
       : null;
 
-    // Group problems by rating buckets
+    // Create rating buckets
     const ratingBuckets = {};
-    problems.forEach(problem => {
-      if (problem.rating) {
-        const bucket = Math.floor(problem.rating / 100) * 100;
-        const bucketKey = `${bucket}-${bucket + 99}`;
-        ratingBuckets[bucketKey] = (ratingBuckets[bucketKey] || 0) + 1;
-      }
+    problemsWithRating.forEach(problem => {
+      const bucket = Math.floor(problem.rating / 100) * 100;
+      const bucketKey = `${bucket}-${bucket + 99}`;
+      ratingBuckets[bucketKey] = (ratingBuckets[bucketKey] || 0) + 1;
     });
+
+    // Sort rating buckets by rating
+    const sortedRatingBuckets = {};
+    Object.keys(ratingBuckets)
+      .sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]))
+      .forEach(key => {
+        sortedRatingBuckets[key] = ratingBuckets[key];
+      });
 
     res.json({
       problems,
       statistics: {
         totalProblems,
-        averageRating: Math.round(averageRating),
-        averageProblemsPerDay: Math.round(averageProblemsPerDay * 100) / 100,
+        averageRating,
+        averageProblemsPerDay: parseFloat(averageProblemsPerDay),
         mostDifficultProblem,
-        ratingBuckets
+        ratingBuckets: sortedRatingBuckets
       }
     });
   } catch (error) {
@@ -340,82 +362,52 @@ const exportStudentsCSV = async (req, res) => {
   }
 };
 
+// Refresh Codeforces data for a student
 const refreshStudentData = async (req, res) => {
   try {
     const { id } = req.params;
     const student = await Student.findById(id);
+    
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
     }
-    // Fetch contest history from Codeforces
-    const contestRes = await axios.get(`https://codeforces.com/api/user.rating?handle=${student.codeforcesHandle}`);
-    if (contestRes.data.status !== 'OK') {
-      return res.status(400).json({ message: 'Failed to fetch contest data from Codeforces' });
+
+    console.log(`Refreshing Codeforces data for student: ${student.name} (${student.codeforcesHandle})`);
+
+    // Fetch user info from Codeforces API
+    const userResponse = await axios.get(`https://codeforces.com/api/user.info?handles=${student.codeforcesHandle}`);
+    
+    if (userResponse.data.status !== 'OK') {
+      return res.status(400).json({ message: 'Failed to fetch user data from Codeforces' });
     }
-    // Remove old contests for this student
-    await Contest.deleteMany({ studentId: student._id });
-    // Insert new contests
-    const contests = contestRes.data.result.map(c => ({
-      studentId: student._id,
-      contestId: c.contestId,
-      contestName: c.contestName,
-      contestDate: new Date(c.ratingUpdateTimeSeconds * 1000),
-      oldRating: c.oldRating,
-      newRating: c.newRating,
-      rank: c.rank,
-      ratingChange: c.newRating - c.oldRating,
-      problemsSolved: 0, // Will update below
-      totalProblems: 0, // Will update below
-      contestType: 'CF'
-    }));
-    await Contest.insertMany(contests);
-    // Fetch problem submissions from Codeforces
-    const subRes = await axios.get(`https://codeforces.com/api/user.status?handle=${student.codeforcesHandle}&from=1&count=10000`);
-    if (subRes.data.status !== 'OK') {
-      return res.status(400).json({ message: 'Failed to fetch submissions from Codeforces' });
-    }
-    // Remove old problems for this student
-    await Problem.deleteMany({ studentId: student._id });
-    // Filter only accepted submissions and unique problems
-    const solvedProblemsMap = {};
-    subRes.data.result.forEach(sub => {
-      if (sub.verdict === 'OK') {
-        const key = `${sub.problem.contestId}-${sub.problem.index}`;
-        if (!solvedProblemsMap[key] || solvedProblemsMap[key].creationTimeSeconds < sub.creationTimeSeconds) {
-          solvedProblemsMap[key] = sub;
-        }
-      }
+
+    const userData = userResponse.data.result[0];
+    
+    // Update student data
+    const updatedStudent = await Student.findByIdAndUpdate(
+      id,
+      {
+        currentRating: userData.rating || 0,
+        maxRating: userData.maxRating || 0,
+        lastUpdated: new Date(),
+        lastDataSync: new Date() // Update data freshness tracking
+      },
+      { new: true }
+    );
+
+    // Fetch and store contest history
+    await fetchAndStoreContestHistory(student.codeforcesHandle, id);
+    
+    // Fetch and store problem submissions
+    await fetchAndStoreProblemSubmissions(student.codeforcesHandle, id);
+
+    res.json({
+      message: 'Codeforces data refreshed successfully',
+      student: updatedStudent
     });
-    const problems = Object.values(solvedProblemsMap).map(sub => ({
-      studentId: student._id,
-      problemId: `${sub.problem.contestId}-${sub.problem.index}`,
-      problemName: sub.problem.name,
-      contestId: sub.problem.contestId,
-      problemIndex: sub.problem.index,
-      rating: sub.problem.rating,
-      tags: sub.problem.tags,
-      solvedDate: new Date(sub.creationTimeSeconds * 1000),
-      submissionId: sub.id,
-      verdict: sub.verdict,
-      programmingLanguage: sub.programmingLanguage,
-      timeConsumed: sub.timeConsumedMillis,
-      memoryConsumed: sub.memoryConsumedBytes,
-      points: sub.problem.points || 0
-    }));
-    await Problem.insertMany(problems);
-    // Update problemsSolved and totalProblems in contests
-    for (const contest of contests) {
-      const contestProblems = problems.filter(p => p.contestId === contest.contestId);
-      contest.problemsSolved = contestProblems.length;
-      // totalProblems is not available from API directly, so leave as 0 or update if you have a source
-      await Contest.updateOne({ studentId: student._id, contestId: contest.contestId }, {
-        $set: { problemsSolved: contestProblems.length }
-      });
-    }
-    res.json({ message: 'Codeforces data refreshed successfully' });
   } catch (error) {
-    console.error('Error refreshing Codeforces data:', error);
-    res.status(500).json({ message: 'Error refreshing Codeforces data', error: error.message });
+    console.error('Error refreshing student data:', error);
+    res.status(500).json({ message: 'Error refreshing student data', error: error.message });
   }
 };
 
@@ -518,6 +510,140 @@ const sendManualReminder = async (req, res) => {
   }
 };
 
+// Get submission heatmap data for a student
+const getSubmissionHeatmap = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { days = 365 } = req.query;
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+    
+    const heatmapData = await Problem.aggregate([
+      {
+        $match: {
+          studentId: new mongoose.Types.ObjectId(id),
+          solvedDate: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$solvedDate" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+    
+    // Convert to the format expected by react-calendar-heatmap
+    const formattedData = heatmapData.map(item => ({
+      date: item._id,
+      count: item.count
+    }));
+    
+    res.json(formattedData);
+  } catch (error) {
+    console.error('Error fetching submission heatmap:', error);
+    res.status(500).json({ message: 'Error fetching submission heatmap data' });
+  }
+};
+
+// Helper function to fetch and store contest history
+const fetchAndStoreContestHistory = async (handle, studentId) => {
+  try {
+    const contestRes = await axios.get(`https://codeforces.com/api/user.rating?handle=${handle}`);
+    if (contestRes.data.status !== 'OK') {
+      throw new Error('Failed to fetch contest data from Codeforces');
+    }
+    
+    // Remove old contests for this student
+    await Contest.deleteMany({ studentId: studentId });
+    
+    // Insert new contests
+    const contests = contestRes.data.result.map(c => ({
+      studentId: studentId,
+      contestId: c.contestId,
+      contestName: c.contestName,
+      contestDate: new Date(c.ratingUpdateTimeSeconds * 1000),
+      oldRating: c.oldRating,
+      newRating: c.newRating,
+      rank: c.rank,
+      ratingChange: c.newRating - c.oldRating,
+      problemsSolved: 0, // Will update below
+      totalProblems: 0, // Will update below
+      contestType: 'CF'
+    }));
+    
+    await Contest.insertMany(contests);
+    return contests;
+  } catch (error) {
+    console.error('Error fetching contest history:', error);
+    throw error;
+  }
+};
+
+// Helper function to fetch and store problem submissions
+const fetchAndStoreProblemSubmissions = async (handle, studentId) => {
+  try {
+    const subRes = await axios.get(`https://codeforces.com/api/user.status?handle=${handle}&from=1&count=10000`);
+    if (subRes.data.status !== 'OK') {
+      throw new Error('Failed to fetch submissions from Codeforces');
+    }
+    
+    // Remove old problems for this student
+    await Problem.deleteMany({ studentId: studentId });
+    
+    // Filter only accepted submissions and unique problems
+    const solvedProblemsMap = {};
+    subRes.data.result.forEach(sub => {
+      if (sub.verdict === 'OK') {
+        const key = `${sub.problem.contestId}-${sub.problem.index}`;
+        if (!solvedProblemsMap[key] || solvedProblemsMap[key].creationTimeSeconds < sub.creationTimeSeconds) {
+          solvedProblemsMap[key] = sub;
+        }
+      }
+    });
+    
+    const problems = Object.values(solvedProblemsMap).map(sub => ({
+      studentId: studentId,
+      problemId: `${sub.problem.contestId}-${sub.problem.index}`,
+      problemName: sub.problem.name,
+      contestId: sub.problem.contestId,
+      problemIndex: sub.problem.index,
+      rating: sub.problem.rating,
+      tags: sub.problem.tags,
+      solvedDate: new Date(sub.creationTimeSeconds * 1000),
+      submissionId: sub.id,
+      verdict: sub.verdict,
+      programmingLanguage: sub.programmingLanguage,
+      timeConsumed: sub.timeConsumedMillis,
+      memoryConsumed: sub.memoryConsumedBytes,
+      points: sub.problem.points || 0
+    }));
+    
+    await Problem.insertMany(problems);
+    
+    // Update problemsSolved in contests
+    const contests = await Contest.find({ studentId: studentId });
+    for (const contest of contests) {
+      const contestProblems = problems.filter(p => p.contestId === contest.contestId);
+      await Contest.updateOne(
+        { studentId: studentId, contestId: contest.contestId },
+        { $set: { problemsSolved: contestProblems.length } }
+      );
+    }
+    
+    return problems;
+  } catch (error) {
+    console.error('Error fetching problem submissions:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -525,12 +651,13 @@ module.exports = {
   updateStudent,
   deleteStudent,
   getStudentContestHistory,
-  getStudentProblemData,
+  getProblemData,
   exportStudentsCSV,
   refreshStudentData,
   toggleEmailReminders,
   getInactivityStatistics,
   getTopReminderStudentsList,
   triggerInactivityCheckManual,
-  sendManualReminder
+  sendManualReminder,
+  getSubmissionHeatmap
 }; 
