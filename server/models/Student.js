@@ -43,6 +43,22 @@ const studentSchema = new mongoose.Schema({
   lastUpdated: {
     type: Date,
     default: Date.now
+  },
+  // Inactivity tracking fields
+  lastSubmissionDate: {
+    type: Date,
+    default: Date.now
+  },
+  reminderEmailCount: {
+    type: Number,
+    default: 0
+  },
+  lastReminderSent: {
+    type: Date
+  },
+  emailRemindersDisabled: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
@@ -51,5 +67,6 @@ const studentSchema = new mongoose.Schema({
 // Index for better query performance
 studentSchema.index({ codeforcesHandle: 1 });
 studentSchema.index({ email: 1 });
+studentSchema.index({ lastSubmissionDate: 1 }); // For inactivity queries
 
 module.exports = mongoose.model('Student', studentSchema); 

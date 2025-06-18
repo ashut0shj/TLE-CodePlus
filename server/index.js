@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { scheduleInactivityCheck } = require('./cron/inactivityCron');
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/tle-codeprogress')
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+// Initialize cron jobs
+scheduleInactivityCheck();
 
 // Routes
 app.use('/api/students', require('./routes/students'));

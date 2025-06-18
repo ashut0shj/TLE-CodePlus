@@ -2,6 +2,9 @@ const Student = require('../models/Student');
 const Contest = require('../models/Contest');
 const Problem = require('../models/Problem');
 const axios = require('axios');
+const { updateLastSubmissionDate } = require('../services/inactivityService');
+const { getInactivityStats, getTopReminderStudents } = require('../services/inactivityService');
+const { triggerInactivityCheck } = require('../cron/inactivityCron');
 
 // Get all students
 const getAllStudents = async (req, res) => {
@@ -99,17 +102,118 @@ const updateStudent = async (req, res) => {
       });
     }
 
+    // Get current student to check if handle changed
+    const currentStudent = await Student.findById(req.params.id);
+    if (!currentStudent) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const handleChanged = currentStudent.codeforcesHandle !== codeforcesHandle;
+
+    // Update student
     const updatedStudent = await Student.findByIdAndUpdate(
       req.params.id,
       { name, email, phoneNumber, codeforcesHandle, lastUpdated: Date.now() },
       { new: true, runValidators: true }
     );
 
-    if (!updatedStudent) {
-      return res.status(404).json({ message: 'Student not found' });
+    // If handle changed, fetch new CF data in real-time
+    if (handleChanged) {
+      try {
+        console.log(`Handle changed for ${updatedStudent.name}, fetching new CF data...`);
+        
+        // Fetch user info to update ratings
+        const userInfoRes = await axios.get(
+          `https://codeforces.com/api/user.info?handles=${codeforcesHandle}`
+        );
+        
+        if (userInfoRes.data.status === 'OK' && userInfoRes.data.result.length > 0) {
+          const userInfo = userInfoRes.data.result[0];
+          await Student.findByIdAndUpdate(updatedStudent._id, {
+            currentRating: userInfo.rating || 0,
+            maxRating: userInfo.maxRating || 0
+          });
+        }
+
+        // Fetch contest history
+        const contestRes = await axios.get(`https://codeforces.com/api/user.rating?handle=${codeforcesHandle}`);
+        if (contestRes.data.status === 'OK') {
+          // Remove old contests for this student
+          await Contest.deleteMany({ studentId: updatedStudent._id });
+          
+          // Insert new contests
+          const contests = contestRes.data.result.map(c => ({
+            studentId: updatedStudent._id,
+            contestId: c.contestId,
+            contestName: c.contestName,
+            contestDate: new Date(c.ratingUpdateTimeSeconds * 1000),
+            oldRating: c.oldRating,
+            newRating: c.newRating,
+            rank: c.rank,
+            ratingChange: c.newRating - c.oldRating,
+            problemsSolved: 0,
+            totalProblems: 0,
+            contestType: 'CF'
+          }));
+          
+          if (contests.length > 0) {
+            await Contest.insertMany(contests);
+          }
+        }
+
+        // Fetch problem submissions
+        const subRes = await axios.get(`https://codeforces.com/api/user.status?handle=${codeforcesHandle}&from=1&count=10000`);
+        if (subRes.data.status === 'OK') {
+          // Remove old problems for this student
+          await Problem.deleteMany({ studentId: updatedStudent._id });
+          
+          // Filter only accepted submissions and unique problems
+          const solvedProblemsMap = {};
+          subRes.data.result.forEach(sub => {
+            if (sub.verdict === 'OK') {
+              const key = `${sub.problem.contestId}-${sub.problem.index}`;
+              if (!solvedProblemsMap[key] || solvedProblemsMap[key].creationTimeSeconds < sub.creationTimeSeconds) {
+                solvedProblemsMap[key] = sub;
+              }
+            }
+          });
+          
+          const problems = Object.values(solvedProblemsMap).map(sub => ({
+            studentId: updatedStudent._id,
+            problemId: `${sub.problem.contestId}-${sub.problem.index}`,
+            problemName: sub.problem.name,
+            contestId: sub.problem.contestId,
+            problemIndex: sub.problem.index,
+            rating: sub.problem.rating,
+            tags: sub.problem.tags,
+            solvedDate: new Date(sub.creationTimeSeconds * 1000),
+            submissionId: sub.id,
+            verdict: sub.verdict,
+            programmingLanguage: sub.programmingLanguage,
+            timeConsumed: sub.timeConsumedMillis,
+            memoryConsumed: sub.memoryConsumedBytes,
+            points: sub.problem.points || 0
+          }));
+          
+          if (problems.length > 0) {
+            await Problem.insertMany(problems);
+            
+            // Update last submission date for inactivity tracking
+            await updateLastSubmissionDate(updatedStudent._id);
+          }
+        }
+
+        console.log(`CF data updated successfully for ${updatedStudent.name}`);
+        
+      } catch (cfError) {
+        console.error('Error fetching CF data after handle update:', cfError.message);
+        // Don't fail the update, just log the error
+      }
     }
 
-    res.json(updatedStudent);
+    // Get the final updated student
+    const finalStudent = await Student.findById(updatedStudent._id);
+    res.json(finalStudent);
   } catch (error) {
     console.error('Error updating student:', error);
     res.status(500).json({ message: 'Error updating student' });
@@ -315,6 +419,105 @@ const refreshStudentData = async (req, res) => {
   }
 };
 
+// Toggle email reminders for a student
+const toggleEmailReminders = async (req, res) => {
+  try {
+    const { emailRemindersDisabled } = req.body;
+    
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      { emailRemindersDisabled },
+      { new: true }
+    );
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.json({
+      message: `Email reminders ${emailRemindersDisabled ? 'disabled' : 'enabled'} for ${student.name}`,
+      student
+    });
+  } catch (error) {
+    console.error('Error toggling email reminders:', error);
+    res.status(500).json({ message: 'Error toggling email reminders' });
+  }
+};
+
+// Get inactivity statistics
+const getInactivityStatistics = async (req, res) => {
+  try {
+    const stats = await getInactivityStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching inactivity stats:', error);
+    res.status(500).json({ message: 'Error fetching inactivity stats' });
+  }
+};
+
+// Get top reminder students
+const getTopReminderStudentsList = async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    const students = await getTopReminderStudents(parseInt(limit));
+    res.json(students);
+  } catch (error) {
+    console.error('Error fetching top reminder students:', error);
+    res.status(500).json({ message: 'Error fetching top reminder students' });
+  }
+};
+
+// Manually trigger inactivity check
+const triggerInactivityCheckManual = async (req, res) => {
+  try {
+    const results = await triggerInactivityCheck();
+    res.json({
+      message: 'Inactivity check triggered successfully',
+      results
+    });
+  } catch (error) {
+    console.error('Error triggering inactivity check:', error);
+    res.status(500).json({ message: 'Error triggering inactivity check' });
+  }
+};
+
+// Send manual reminder to specific student
+const sendManualReminder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const student = await Student.findById(id);
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    if (student.emailRemindersDisabled) {
+      return res.status(400).json({ message: 'Email reminders are disabled for this student' });
+    }
+
+    // Import the email service
+    const { sendInactivityReminder } = require('../services/emailService');
+    
+    // Send the reminder email
+    await sendInactivityReminder(student);
+    
+    // Update student record
+    await Student.findByIdAndUpdate(student._id, {
+      reminderEmailCount: student.reminderEmailCount + 1,
+      lastReminderSent: new Date()
+    });
+
+    res.json({
+      message: `Reminder sent successfully to ${student.name}`,
+      studentId: student._id,
+      reminderCount: student.reminderEmailCount + 1
+    });
+  } catch (error) {
+    console.error('Error sending manual reminder:', error);
+    res.status(500).json({ message: 'Error sending manual reminder', error: error.message });
+  }
+};
+
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -324,5 +527,10 @@ module.exports = {
   getStudentContestHistory,
   getStudentProblemData,
   exportStudentsCSV,
-  refreshStudentData
+  refreshStudentData,
+  toggleEmailReminders,
+  getInactivityStatistics,
+  getTopReminderStudentsList,
+  triggerInactivityCheckManual,
+  sendManualReminder
 }; 
