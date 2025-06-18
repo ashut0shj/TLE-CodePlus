@@ -12,9 +12,12 @@ const StudentProfile = () => {
   const [problems, setProblems] = useState([]);
   const [statistics, setStatistics] = useState({});
   const [loading, setLoading] = useState(true);
+  const [contestLoading, setContestLoading] = useState(false);
+  const [problemLoading, setProblemLoading] = useState(false);
   const [error, setError] = useState(null);
   const [contestFilter, setContestFilter] = useState(365);
   const [problemFilter, setProblemFilter] = useState(90);
+  const [refreshing, setRefreshing] = useState(false);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -44,20 +47,48 @@ const StudentProfile = () => {
 
   const fetchContestHistory = async () => {
     try {
+      setContestLoading(true);
       const response = await axios.get(`${API_BASE_URL}/students/${id}/contests?days=${contestFilter}`);
       setContests(response.data);
     } catch (err) {
       console.error('Error fetching contest history:', err);
+    } finally {
+      setContestLoading(false);
     }
   };
 
   const fetchProblemData = async () => {
     try {
+      setProblemLoading(true);
       const response = await axios.get(`${API_BASE_URL}/students/${id}/problems?days=${problemFilter}`);
       setProblems(response.data.problems);
       setStatistics(response.data.statistics);
     } catch (err) {
       console.error('Error fetching problem data:', err);
+    } finally {
+      setProblemLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      console.log('Refreshing Codeforces data for student:', id);
+      const response = await axios.post(`${API_BASE_URL}/students/${id}/refresh`);
+      console.log('Refresh response:', response.data);
+      
+      // Reload all data
+      await fetchStudentData();
+      await fetchContestHistory();
+      await fetchProblemData();
+      
+      alert('Codeforces data refreshed successfully!');
+    } catch (err) {
+      console.error('Refresh error:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to refresh Codeforces data';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -133,7 +164,7 @@ const StudentProfile = () => {
           <h1 className="text-3xl font-bold text-gray-800">{student.name}</h1>
           <p className="text-gray-600">{student.email}</p>
         </div>
-        <div className="text-right">
+        <div className="text-right space-y-2">
           <div className={`text-2xl font-bold ${getRatingColor(student.currentRating)}`}>
             {student.currentRating}
           </div>
@@ -141,6 +172,13 @@ const StudentProfile = () => {
           <div className={`text-lg ${getRatingColor(student.maxRating)}`}>
             Max: {student.maxRating}
           </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className={`mt-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors ${refreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh Codeforces Data'}
+          </button>
         </div>
       </div>
 
@@ -196,7 +234,11 @@ const StudentProfile = () => {
         {/* Contest List */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Recent Contests</h3>
-          {contests.length > 0 ? (
+          {contestLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : contests.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -270,17 +312,23 @@ const StudentProfile = () => {
         {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">Problems by Rating</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={prepareRatingBucketsData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="bucket" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#3B82F6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {problemLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={prepareRatingBucketsData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="bucket" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#3B82F6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
         )}
 
@@ -288,21 +336,27 @@ const StudentProfile = () => {
         {problems.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-4">Submission Heatmap</h3>
-            <div className="overflow-x-auto">
-              <CalendarHeatmap
-                startDate={new Date(Date.now() - problemFilter * 24 * 60 * 60 * 1000)}
-                endDate={new Date()}
-                values={prepareHeatmapData()}
-                classForValue={(value) => {
-                  if (!value) return 'color-empty';
-                  return `color-scale-${Math.min(value.count, 4)}`;
-                }}
-                titleForValue={(value) => {
-                  if (!value) return 'No submissions';
-                  return `${value.count} problem(s) solved on ${value.date}`;
-                }}
-              />
-            </div>
+            {problemLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <CalendarHeatmap
+                  startDate={new Date(Date.now() - problemFilter * 24 * 60 * 60 * 1000)}
+                  endDate={new Date()}
+                  values={prepareHeatmapData()}
+                  classForValue={(value) => {
+                    if (!value) return 'color-empty';
+                    return `color-scale-${Math.min(value.count, 4)}`;
+                  }}
+                  titleForValue={(value) => {
+                    if (!value) return 'No submissions';
+                    return `${value.count} problem(s) solved on ${value.date}`;
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
