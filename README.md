@@ -6,13 +6,20 @@
 - **Report:** [https://drive.google.com/file/d/1tQuz3Xa6k24m3PxPxcliofz0Oez6MVpu/view?usp=sharing](https://drive.google.com/file/d/1tQuz3Xa6k24m3PxPxcliofz0Oez6MVpu/view?usp=sharing)
 
 
-## 🚀 Live Demo
+## Live Demo
 
 - **Frontend:** [https://tle-code-plus.vercel.app/](https://tle-code-plus.vercel.app/)
 - **Backend API:** [https://tle-codeplus.onrender.com/](https://tle-codeplus.onrender.com/)
 
 
-A MERN stack application for tracking student progress in competitive programming with Codeforces integration.
+
+
+## ✅ Completed Bonus Features
+
+- **Mobile & Tablet Responsive**
+- **Light/Dark Mode Toggle**
+- **Well Documented Code**
+
 
 
 ## Screenshots
