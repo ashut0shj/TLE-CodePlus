@@ -4,6 +4,7 @@ import './App.css';
 import StudentTable from './components/StudentTable.jsx';
 import StudentProfile from './components/StudentProfile.jsx';
 import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
             <Route path="/student/:id" element={<StudentProfile />} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );

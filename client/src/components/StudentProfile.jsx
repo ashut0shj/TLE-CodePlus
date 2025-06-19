@@ -54,7 +54,7 @@ const ContestModal = ({ isOpen, onClose, contests, contestFilter, setContestFilt
         </div>
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <div className="rounded-lg border-2 border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+            <div className="rounded-lg border-2 border-blue-300 bg-white p-4 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={contests.map(contest => ({
@@ -79,7 +79,7 @@ const ContestModal = ({ isOpen, onClose, contests, contestFilter, setContestFilt
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto border-2 border-gray-200 rounded-lg shadow-md mt-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+          <div className="overflow-x-auto border-2 border-blue-300 rounded-lg shadow-md mt-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -181,7 +181,7 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
           <div className="flex flex-col md:flex-row gap-4">
             {/* Left: Problem Stats Card */}
             <div className="md:w-1/3 p-0">
-              <div className="border-2 border-gray-200 rounded-lg bg-blue-50 p-6 h-full shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+              <div className="border-2 border-blue-300 rounded-lg bg-blue-50 p-6 h-full shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                 <h3 className="text-lg font-semibold text-blue-900 mb-4">Problem Stats</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -221,7 +221,7 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
             </div>
             {/* Right: Bar Graph */}
             <div className="md:w-2/3 p-0 flex items-center justify-center">
-              <div className="border-2 border-gray-200 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+              <div className="border-2 border-blue-300 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                 {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 ? (
                   <div className="w-full h-40">
                     <ResponsiveContainer width="100%" height="100%">
@@ -256,7 +256,7 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
             </div>
           </div>
           {/* Problems Table */}
-          <div className="overflow-x-auto border-2 border-gray-200 rounded-lg shadow-md mt-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+          <div className="overflow-x-auto border-2 border-blue-300 rounded-lg shadow-md mt-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -664,7 +664,7 @@ const StudentProfile = () => {
           ) : contests.length > 0 ? (
             <div>
               <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <div className="rounded-lg border-2 border-gray-200 bg-white p-4 shadow-sm">
+                <div className="rounded-lg border-2 border-blue-300 bg-white p-4 shadow-sm">
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={prepareRatingChartData()}>
@@ -738,7 +738,7 @@ const StudentProfile = () => {
               <div className="flex flex-col md:flex-row gap-4">
                 {/* Left: Problem Stats Card */}
                 <div className="md:w-1/3 p-0">
-                  <div className="border-2 border-gray-200 rounded-lg bg-blue-50 p-6 h-full shadow-sm">
+                  <div className="border-2 border-blue-300 rounded-lg bg-blue-50 p-6 h-full shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                     <h3 className="text-lg font-semibold text-blue-900 mb-4">Problem Stats</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
@@ -778,7 +778,7 @@ const StudentProfile = () => {
                 </div>
                 {/* Right: Bar Graph */}
                 <div className="md:w-2/3 p-0 flex items-center justify-center">
-                  <div className="border-2 border-gray-200 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-sm">
+                  <div className="border-2 border-blue-300 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                     {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 ? (
                       <div className="w-full h-40">
                         <ResponsiveContainer width="100%" height="100%">
@@ -814,7 +814,7 @@ const StudentProfile = () => {
               </div>
               {/* Heatmap - Smallest with Legend */}
               <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-                <div className="border-2 border-gray-200 rounded-lg bg-white p-2 flex items-center shadow-sm">
+                <div className="border-2 border-blue-300 rounded-lg bg-white p-2 flex items-center shadow-sm">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Activity Heatmap ({new Date().getFullYear()})</h3>
                   {heatmapLoading ? (
                     <div className="flex justify-center py-2">
