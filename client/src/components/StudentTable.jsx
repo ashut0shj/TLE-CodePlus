@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { CSVLink } from 'react-csv';
 import StudentModal from './StudentModal.jsx';
+import StudentTableHeader from './StudentTable/StudentTableHeader.jsx';
+import StudentTableRow from './StudentTable/StudentTableRow.jsx';
 
 const StudentTable = () => {
   const [students, setStudents] = useState([]);
@@ -102,16 +103,6 @@ const StudentTable = () => {
       return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
     }
   });
-
-  const getRatingColor = (rating) => {
-    if (rating >= 2400) return 'text-red-600 font-semibold';
-    if (rating >= 2100) return 'text-amber-600 font-semibold';
-    if (rating >= 1900) return 'text-purple-600 font-semibold';
-    if (rating >= 1600) return 'text-blue-600 font-semibold';
-    if (rating >= 1400) return 'text-cyan-600 font-semibold';
-    if (rating >= 1200) return 'text-green-600 font-semibold';
-    return 'text-slate-600';
-  };
 
   if (loading) {
     return (
@@ -218,22 +209,10 @@ const StudentTable = () => {
           <div className="overflow-x-auto">
             <table className="w-full font-sans">
               <thead>
-                <tr className="bg-slate-50 border-b-2 border-blue-200">
-                  <th onClick={() => handleSort('name')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
-                    Name ⥯{sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Email</th>
-                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Phone</th>
-                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Handle</th>
-                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Last Sync</th>
-                  <th onClick={() => handleSort('currentRating')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
-                    Current ⥯ {sortConfig.key === 'currentRating' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                  <th onClick={() => handleSort('maxRating')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
-                    Max ⥯ {sortConfig.key === 'maxRating' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide uppercase">Actions</th>
-                </tr>
+                <StudentTableHeader
+                  sortConfig={sortConfig}
+                  handleSort={handleSort}
+                />
               </thead>
               <tbody>
                 {sortedStudents.map((student, index) => {
@@ -251,69 +230,13 @@ const StudentTable = () => {
                     }
                   }
                   return (
-                    <tr
+                    <StudentTableRow
                       key={student._id}
-                      className={`${rowClass} border-b border-gray-300 hover:shadow-sm hover:scale-[1.01] transition-all duration-150`}
-                    >
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <div className="font-medium text-slate-800">{student.name}</div>
-                      </td>
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <div className="text-slate-600">{student.email}</div>
-                      </td>
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <div className="text-slate-600">{student.phoneNumber}</div>
-                      </td>
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`https://codeforces.com/profile/${student.codeforcesHandle}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-blue-600 hover:underline"
-                          >
-                            {student.codeforcesHandle}
-                          </a>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <span className="text-xs text-slate-500">
-                          {student.lastDataSync ? new Date(student.lastDataSync).toLocaleDateString() : 'Never'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <span className={`font-mono ${getRatingColor(student.currentRating)}`}>
-                          {student.currentRating}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 border-r border-gray-100">
-                        <span className={`font-mono ${getRatingColor(student.maxRating)}`}>
-                          {student.maxRating}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <div className="flex gap-2">
-                          <Link
-                            to={`/student/${student._id}`}
-                            className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors duration-200"
-                          >
-                            View
-                          </Link>
-                          <button
-                            onClick={() => handleEditStudent(student)}
-                            className="px-3 py-1 text-xs font-medium text-white bg-gray-600 rounded-full hover:bg-gray-700 transition-colors duration-200"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStudent(student._id)}
-                            className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition-colors duration-200"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                      student={student}
+                      rowClass={rowClass}
+                      handleEditStudent={handleEditStudent}
+                      handleDeleteStudent={handleDeleteStudent}
+                    />
                   );
                 })}
               </tbody>
