@@ -106,7 +106,7 @@ const StudentTable = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="px-6 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
@@ -117,27 +117,27 @@ const StudentTable = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-6 py-8 space-y-6">
         
         {/* Header */}
-        <div className="bg-white rounded-lg border border-blue-400 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-400 dark:border-blue-700 p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800">Students</h1>
-              <p className="text-slate-600 mt-1">Manage and track student progress</p>
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200">Students</h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">Manage and track student progress</p>
             </div>
             <div className="flex gap-3">
               <CSVLink
                 data={students}
                 filename="students.csv"
-                className="px-4 py-2 text-sm font-medium text-slate-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
               >
                 Export CSV
               </CSVLink>
               <button
                 onClick={handleAddStudent}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-500 dark:bg-blue-700 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-800 transition-all duration-200"
               >
                 Add Student
               </button>
@@ -145,21 +145,21 @@ const StudentTable = () => {
           </div>
           
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg">
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
         </div>
 
         {/* Search and Stats */}
-        <div className="bg-white rounded-lg border border-blue-400 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-400 dark:border-blue-700 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                  <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-5 w-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -168,11 +168,11 @@ const StudentTable = () => {
                   placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900"
                 />
               </div>
               {searchTerm && (
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {filteredStudents.length} result{filteredStudents.length !== 1 ? 's' : ''}
                 </p>
               )}
@@ -181,11 +181,11 @@ const StudentTable = () => {
             {/* Stats */}
             <div className="flex gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-slate-800">{filteredStudents.length}</div>
-                <div className="text-sm text-slate-600">Total</div>
+                <div className="text-2xl font-bold text-slate-800 dark:text-slate-200">{filteredStudents.length}</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-500">
+                <div className="text-2xl font-bold text-red-500 dark:text-red-400">
                   {filteredStudents.filter(student => {
                     if (!student.lastSubmissionDate) return true;
                     const now = new Date();
@@ -194,16 +194,16 @@ const StudentTable = () => {
                     return days > 7;
                   }).length}
                 </div>
-                <div className="text-sm text-slate-600">Inactive 7d+</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">Inactive 7d+</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg border border-blue-400 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-slate-800">Student List</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-400 dark:border-blue-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">Student List</h2>
           </div>
           
           <div className="overflow-x-auto">
@@ -216,17 +216,17 @@ const StudentTable = () => {
               </thead>
               <tbody>
                 {sortedStudents.map((student, index) => {
-                  let rowClass = 'bg-gradient-to-b from-gray-50 via-white to-gray-50';
+                  let rowClass = 'bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800';
                   if (!student.lastSubmissionDate) {
-                    rowClass = 'bg-red-100';
+                    rowClass = 'bg-red-100 dark:bg-red-900';
                   } else {
                     const now = new Date();
                     const last = new Date(student.lastSubmissionDate);
                     const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
                     if (days > 7) {
-                      rowClass = 'bg-red-100';
+                      rowClass = 'bg-red-100 dark:bg-red-900';
                     } else if (days > 4) {
-                      rowClass = 'bg-amber-100';
+                      rowClass = 'bg-amber-100 dark:bg-amber-900';
                     }
                   }
                   return (
@@ -245,7 +245,7 @@ const StudentTable = () => {
           
           {filteredStudents.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-slate-500">
+              <p className="text-slate-500 dark:text-slate-400">
                 {searchTerm ? 'No students found matching your search.' : 'No students found.'}
               </p>
             </div>
