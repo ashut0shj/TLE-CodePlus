@@ -12,12 +12,20 @@ const StudentTable = () => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [inactivityStats, setInactivityStats] = useState(null);
+  const [animateHeader, setAnimateHeader] = useState(false);
+  const [animateStats, setAnimateStats] = useState(false);
+  const [animateSearch, setAnimateSearch] = useState(false);
+  const [animateTable, setAnimateTable] = useState(false);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
   useEffect(() => {
     fetchStudents();
     fetchInactivityStats();
+    setTimeout(() => setAnimateHeader(true), 100);
+    setTimeout(() => setAnimateStats(true), 400);
+    setTimeout(() => setAnimateSearch(true), 700);
+    setTimeout(() => setAnimateTable(true), 1000);
   }, []);
 
   const fetchStudents = async () => {
@@ -111,34 +119,30 @@ const StudentTable = () => {
   }
 
   return (
-    <div className="space-y-6">
-      
+    <div className="space-y-8">
       {/* Header Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 p-6 transition-all duration-700 transform ${animateHeader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900">Students</h1>
             <p className="text-gray-600 mt-2">Manage and track student progress in competitive programming</p>
           </div>
-          
           <div className="flex flex-col sm:flex-row gap-3">
             <CSVLink
               data={students}
               filename="students.csv"
-              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
             >
               Export CSV
             </CSVLink>
             <button
               onClick={handleAddStudent}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
             >
               Add Student
             </button>
           </div>
         </div>
-        
-        {/* Error Message */}
         {error && (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="text-red-800 text-sm font-medium">{error}</div>
@@ -148,29 +152,26 @@ const StudentTable = () => {
 
       {/* Statistics Section */}
       {inactivityStats && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 p-6 transition-all duration-700 transform ${animateStats ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="mb-3">
             <h2 className="text-lg font-semibold text-gray-900">Activity Overview</h2>
             <p className="text-gray-600 text-xs mt-1">Current student activity statistics</p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-blue-50 rounded-lg p-3 text-center border border-blue-100">
-              <div className="text-xl font-bold text-blue-600 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 rounded-lg p-4 text-center border-2 border-gray-200 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.03]">
+              <div className="text-2xl font-bold text-blue-600 mb-1">
                 {inactivityStats.totalStudents}
               </div>
               <div className="text-xs font-medium text-blue-800">Total Students</div>
             </div>
-            
-            <div className="bg-red-50 rounded-lg p-3 text-center border border-red-100">
-              <div className="text-xl font-bold text-red-600 mb-1">
+            <div className="bg-red-50 rounded-lg p-4 text-center border-2 border-gray-200 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.03]">
+              <div className="text-2xl font-bold text-red-600 mb-1">
                 {inactivityStats.inactive7Days}
               </div>
               <div className="text-xs font-medium text-red-800">Inactive (7+ days)</div>
             </div>
-            
-            <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
-              <div className="text-xl font-bold text-gray-600 mb-1">
+            <div className="bg-gray-50 rounded-lg p-4 text-center border-2 border-gray-200 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.03]">
+              <div className="text-2xl font-bold text-gray-600 mb-1">
                 {inactivityStats.remindersDisabled}
               </div>
               <div className="text-xs font-medium text-gray-700">Reminders Disabled</div>
@@ -180,7 +181,7 @@ const StudentTable = () => {
       )}
 
       {/* Search Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 p-6 transition-all duration-700 transform ${animateSearch ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="flex-1 w-full">
             <label htmlFor="search" className="sr-only">Search students</label>
@@ -196,11 +197,10 @@ const StudentTable = () => {
                 placeholder="Search by name, email, or Codeforces handle..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
               />
             </div>
           </div>
-          
           {searchTerm && (
             <div className="flex-shrink-0">
               <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
@@ -212,42 +212,27 @@ const StudentTable = () => {
       </div>
 
       {/* Students Table Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 overflow-hidden transition-all duration-700 transform ${animateTable ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Student List</h2>
           <p className="text-gray-600 text-sm mt-1">Complete list of registered students</p>
         </div>
-        
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Phone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Codeforces Handle
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Current Rating
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Max Rating
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Codeforces Handle</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredStudents.map((student, idx) => (
-                <tr key={student._id} className="hover:bg-gray-50 transition-colors duration-150">
+                <tr key={student._id} className="hover:bg-blue-50 hover:shadow-md hover:scale-[1.01] transition-all duration-300">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{student.name}</div>
                   </td>
@@ -274,19 +259,19 @@ const StudentTable = () => {
                     <div className="flex space-x-2">
                       <Link
                         to={`/student/${student._id}`}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
                       >
                         View
                       </Link>
                       <button
                         onClick={() => handleEditStudent(student)}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteStudent(student._id)}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
                       >
                         Delete
                       </button>
@@ -296,7 +281,6 @@ const StudentTable = () => {
               ))}
             </tbody>
           </table>
-          
           {filteredStudents.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500">
