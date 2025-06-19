@@ -12,7 +12,7 @@ const App = () => {
   // Global dark mode state
   const [dark, setDark] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return localStorage.getItem('theme') === 'dark'; // Default to light unless explicitly set
     }
     return false;
   });
