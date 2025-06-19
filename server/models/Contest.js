@@ -51,7 +51,7 @@ const contestSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index for efficient queries
+
 contestSchema.index({ studentId: 1, contestDate: -1 });
 contestSchema.index({ contestId: 1, studentId: 1 }, { unique: true });
 

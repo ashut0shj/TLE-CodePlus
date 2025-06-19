@@ -44,7 +44,7 @@ const studentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  // Inactivity tracking fields
+  
   lastSubmissionDate: {
     type: Date,
     default: Date.now
@@ -60,7 +60,7 @@ const studentSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  // Data freshness tracking
+  
   lastDataSync: {
     type: Date,
     default: Date.now
@@ -69,7 +69,7 @@ const studentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for inactivity queries
+
 studentSchema.index({ lastSubmissionDate: 1 });
 
 module.exports = mongoose.model('Student', studentSchema); 

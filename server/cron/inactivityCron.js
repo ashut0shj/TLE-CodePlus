@@ -12,13 +12,13 @@ const scheduleInactivityCheck = () => {
     }
   }, {
     scheduled: true,
-    timezone: "Asia/Kolkata" // Adjust timezone as needed
+    timezone: "Asia/Kolkata" 
   });
   
   console.log('Inactivity check scheduled to run daily at 2:00 AM');
 };
 
-// Manual trigger function for testing
+
 const triggerInactivityCheck = async () => {
   console.log('Manually triggering inactivity check...');
   try {

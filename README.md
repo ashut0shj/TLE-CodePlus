@@ -1,4 +1,4 @@
-# TLE CodePlus - Student Progress Management System
+# TLE CodePlus
 
 
 - **Walkthrough Video:** [https://drive.google.com/file/d/1qmWsmpT6ouuzN-rjlaXYkKhqNGnsrh9i/view?usp=sharing](https://drive.google.com/file/d/1qmWsmpT6ouuzN-rjlaXYkKhqNGnsrh9i/view?usp=sharing)
@@ -12,134 +12,115 @@
 - **Backend API:** [https://tle-codeplus.onrender.com/](https://tle-codeplus.onrender.com/)
 
 
+A MERN stack application for tracking student progress in competitive programming with Codeforces integration.
 
-A modern MERN stack application for managing and tracking student progress in competitive programming, with deep Codeforces integration, beautiful UI, and full dark mode support.
 
----
-
-## 🚀 Features at a Glance
-
-- **Student Table**: Search, sort, add, edit, delete, and export students. Color-coded ratings, inactivity highlighting, and mobile-friendly design.
-- **Student Profile**: Contest history, rating charts, problem stats, activity heatmap, and reminders—all in a responsive, dark-mode-ready interface.
-- **Codeforces Sync**: Automatic and manual data refresh, contest and problem tracking, and inactivity detection.
-- **Dark Mode**: Toggle dark/light mode globally. All UI elements, charts, and heatmaps adapt instantly.
-- **Modern UI**: Minimal gradients, glowing branding, solid action buttons, and smooth transitions.
-
----
-
-## 🛠️ Tech Stack
-
-**Backend:** Node.js, Express.js, MongoDB, Mongoose, Axios  
-**Frontend:** React.js, React Router, Tailwind CSS, Recharts, React Calendar Heatmap, React CSV
-
----
-
-## ⚡ Quick Start
-
-### 1. Clone the repository
-```bash
-git clone <repository-url>
-cd TLE-CodePlus
-```
-
-### 2. Install Dependencies in both cliet and server
-```bash
-npm install
-```
-
-### 3. Configure Environment
-Create a `.env` file in the `server` directory:
-```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/tle-codeprogress
-NODE_ENV=development
-```
-
-### 4. Start the Application
-- Start the server:
-  ```bash
-  cd server && npm run dev
-  ```
-- Start the client:
-  ```bash
-  cd client && npm start
-  ```
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
-
----
-
-## 🖥️ Main Features
+## Screenshots
 
 ### Student Table
-- View, search, sort, and manage all students
-- Add/edit/delete with instant UI updates
-- Export all data as CSV
-- Color-coded ratings and inactivity highlighting
-- Click on a student name or "View" to open their profile
+![Student Table](screenshots/students-table.png)
+*Main dashboard with student list, search, and management features*
 
 ### Student Profile
-- **Contest History**: Interactive rating chart, filter by time, detailed contest list
-- **Problem Solving**: Stats dashboard, rating buckets bar chart, hardest problem, filter by time
-- **Activity Heatmap**: Visualize daily problem-solving activity (dark mode supported)
-- **Reminders**: Send and track email reminders for inactivity
-- **Manual/Auto Data Refresh**: Sync with Codeforces at any time
+![Student Profile](screenshots/student-profile.png)
+*Individual student view with contest history and rating charts*
+
+### Contest History
+![Contest History](screenshots/contest-history.png)
+*Rating progression and contest performance tracking*
+
+### Problem Stats
+![Problem Stats](screenshots/heatmap.png)
+*Problem-solving statistics and difficulty analysis*
+
+
+### Dark Mode
+![Dark Mode](screenshots/dark.png)
+*Complete dark theme across all components*
+
+### Email Reminder
+![Email](screenshots/mail.png)
+
+
+
+## API Endpoints
+
+### Students
+- `GET /api/students` - Get all students
+- `POST /api/students` - Create new student
+- `GET /api/students/:id` - Get student by ID
+- `PUT /api/students/:id` - Update student
+- `DELETE /api/students/:id` - Delete student
+- `POST /api/students/:id/sync` - Sync with Codeforces
+
+### Contests
+- `GET /api/contests/:studentId` - Get student's contests
+- `POST /api/contests` - Add contest data
+- `PUT /api/contests/:id` - Update contest
+- `DELETE /api/contests/:id` - Delete contest
+
+### Problems
+- `GET /api/problems/:studentId` - Get student's problems
+- `POST /api/problems` - Add problem data
+- `GET /api/problems/stats/:studentId` - Get problem statistics
 
 ### Codeforces Integration
-- Fetches and updates ratings, contests, and problems from Codeforces API
-- Tracks inactivity and highlights students accordingly
+- `POST /api/codeforces/sync/:handle` - Manual sync student data
+- `GET /api/codeforces/user/:handle` - Get user info
+- `GET /api/codeforces/submissions/:handle` - Get submissions
 
-### UI/UX
-- **Dark Mode**: Toggle in navbar, all components adapt
-- **Mobile Responsive**: Works on all screen sizes
-- **Modern Look**: Minimal gradients, glowing logo, solid buttons, smooth transitions
+## Database Schema
 
----
-
-## 🗄️ Database Models (Simplified)
-
-### Student
-```js
+### Student Model
+```javascript
 {
-  name, email, phoneNumber, codeforcesHandle, currentRating, maxRating,
-  enrollmentDate, isActive, lastUpdated, lastSubmissionDate, lastDataSync
-}
-```
-### Contest
-```js
-{
-  studentId, contestId, contestName, contestDate, oldRating, newRating,
-  rank, problemsSolved, totalProblems, ratingChange, contestType
-}
-```
-### Problem
-```js
-{
-  studentId, problemId, problemName, contestId, problemIndex, rating, tags,
-  solvedDate, submissionId, verdict, programmingLanguage, timeConsumed, memoryConsumed, points
+  name: String,
+  email: String,
+  phoneNumber: String,
+  codeforcesHandle: String,
+  currentRating: Number,
+  maxRating: Number,
+  enrollmentDate: Date,
+  isActive: Boolean,
+  lastUpdated: Date,
+  lastSubmissionDate: Date,
+  lastDataSync: Date
 }
 ```
 
----
+### Contest Model
+```javascript
+{
+  studentId: ObjectId,
+  contestId: Number,
+  contestName: String,
+  contestDate: Date,
+  oldRating: Number,
+  newRating: Number,
+  rank: Number,
+  problemsSolved: Number,
+  totalProblems: Number,
+  ratingChange: Number,
+  contestType: String
+}
+```
 
-## 🤝 Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
----
-
-## 📄 License
-MIT License
-
----
-
-## 💬 Support
-For questions or support, open an issue in the repository.
-
----
-
-**Enjoy using TLE CodePlus!** 
+### Problem Model
+```javascript
+{
+  studentId: ObjectId,
+  problemId: String,
+  problemName: String,
+  contestId: Number,
+  problemIndex: String,
+  rating: Number,
+  tags: [String],
+  solvedDate: Date,
+  submissionId: Number,
+  verdict: String,
+  programmingLanguage: String,
+  timeConsumed: Number,
+  memoryConsumed: Number,
+  points: Number
+}
+```

@@ -1,15 +1,15 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter (you'll need to configure this with your email provider)
+
 const createTransporter = () => {
-  // Check if email credentials are configured
+  
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
     console.warn('Email credentials not configured. Emails will be logged instead of sent.');
     return null;
   }
 
   return nodemailer.createTransport({
-    service: 'gmail', // or your email provider
+    service: 'gmail', 
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD
@@ -17,13 +17,13 @@ const createTransporter = () => {
   });
 };
 
-// Send inactivity reminder email
+
 const sendInactivityReminder = async (student) => {
   try {
     const transporter = createTransporter();
     
     if (!transporter) {
-      // Log the email instead of sending it
+      
       console.log('=== EMAIL WOULD BE SENT ===');
       console.log('To:', student.email);
       console.log('Subject: Keep Up Your Problem Solving Streak! 🚀');
@@ -32,7 +32,7 @@ const sendInactivityReminder = async (student) => {
       return { messageId: 'logged-instead-of-sent' };
     }
 
-    // Calculate days since last submission
+    
     const daysSinceLastSubmission = Math.floor((new Date() - new Date(student.lastSubmissionDate)) / (1000 * 60 * 60 * 24));
     
     const mailOptions = {
@@ -82,7 +82,7 @@ const sendInactivityReminder = async (student) => {
                 <span style="color: #fbbf24;">while</span>(<span style="color: #34d399;">!success</span>) {<br>
                 &nbsp;&nbsp;<span style="color: #f87171;">practice</span>();<br>
                 }<br>
-                <span style="color: #9ca3af;">// Keep coding! 🚀</span>
+                <span style="color: #9ca3af;">
               </div>
             </div>
             
@@ -94,7 +94,7 @@ const sendInactivityReminder = async (student) => {
             </ul>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://codeforces.com/problemset" 
+              <a href="https:
                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
                 🚀 Start Solving Now!
               </a>
@@ -122,7 +122,7 @@ const sendInactivityReminder = async (student) => {
   }
 };
 
-// Send test email
+
 const sendTestEmail = async (to) => {
   try {
     const transporter = createTransporter();

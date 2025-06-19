@@ -2,12 +2,12 @@ const Student = require('../models/Student');
 const Problem = require('../models/Problem');
 const { sendInactivityReminder } = require('./emailService');
 
-// Check for inactive students and send reminder emails
+
 const checkInactivityAndSendReminders = async () => {
   try {
     console.log('Checking for inactive students...');
     
-    // Find students who haven't made submissions in the last 7 days
+    
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
@@ -23,7 +23,7 @@ const checkInactivityAndSendReminders = async () => {
     
     for (const student of inactiveStudents) {
       try {
-        // Check if we already sent a reminder recently (within 7 days)
+        
         const lastReminderThreshold = new Date();
         lastReminderThreshold.setDate(lastReminderThreshold.getDate() - 7);
         
@@ -32,10 +32,10 @@ const checkInactivityAndSendReminders = async () => {
           continue;
         }
 
-        // Send reminder email
+        
         await sendInactivityReminder(student);
         
-        // Update student record
+        
         await Student.findByIdAndUpdate(student._id, {
           reminderEmailCount: student.reminderEmailCount + 1,
           lastReminderSent: new Date()
@@ -51,7 +51,7 @@ const checkInactivityAndSendReminders = async () => {
 
         console.log(`Reminder sent to ${student.name} (${student.email})`);
         
-        // Add delay to avoid rate limiting
+        
         await new Promise(resolve => setTimeout(resolve, 1000));
         
       } catch (error) {
@@ -75,7 +75,7 @@ const checkInactivityAndSendReminders = async () => {
   }
 };
 
-// Update last submission date for a student based on their latest problem submission
+
 const updateLastSubmissionDate = async (studentId) => {
   try {
     const latestProblem = await Problem.findOne({ studentId })
@@ -93,7 +93,7 @@ const updateLastSubmissionDate = async (studentId) => {
   }
 };
 
-// Get inactivity statistics
+
 const getInactivityStats = async () => {
   try {
     const sevenDaysAgo = new Date();
@@ -136,7 +136,7 @@ const getInactivityStats = async () => {
   }
 };
 
-// Get students with most reminder emails sent
+
 const getTopReminderStudents = async (limit = 10) => {
   try {
     return await Student.find({ isActive: true, reminderEmailCount: { $gt: 0 } })

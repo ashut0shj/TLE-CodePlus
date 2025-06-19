@@ -55,7 +55,7 @@ const problemSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index for efficient queries
+
 problemSchema.index({ studentId: 1, solvedDate: -1 });
 problemSchema.index({ problemId: 1, studentId: 1 }, { unique: true });
 problemSchema.index({ rating: 1 });
