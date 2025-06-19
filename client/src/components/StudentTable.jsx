@@ -225,7 +225,14 @@ const StudentTable = () => {
                       <div className="text-slate-600">{student.phoneNumber}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-mono text-blue-600">{student.codeforcesHandle}</div>
+                      <a
+                        href={`https://codeforces.com/profile/${student.codeforcesHandle}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-blue-600 hover:underline"
+                      >
+                        {student.codeforcesHandle}
+                      </a>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`font-mono ${getRatingColor(student.currentRating)}`}>
