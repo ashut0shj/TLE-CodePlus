@@ -240,8 +240,8 @@ const StudentProfile = () => {
   if (error || !student) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-600 mb-4">{error || 'Student not found'}</div>
-        <Link to="/" className="text-blue-600 hover:text-blue-800">
+        <div className="text-red-600 dark:text-red-400 mb-4">{error || 'Student not found'}</div>
+        <Link to="/" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
           Back to Students
         </Link>
       </div>
@@ -250,11 +250,11 @@ const StudentProfile = () => {
 
   const inactivityStatus = getInactivityStatus(student.lastSubmissionDate);
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="px-4 py-6 mx-auto space-y-6">
         {/* Header Section */}
         <div
-          className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 rounded-lg overflow-hidden transition-all duration-700 transform ${animateHeader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border-4 border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-700 transform ${animateHeader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
           <div className="px-6 py-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -263,7 +263,7 @@ const StudentProfile = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <Link 
                     to="/" 
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -271,31 +271,31 @@ const StudentProfile = () => {
                     Back
                   </Link>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-1 truncate">{student.name}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-gray-600 text-sm mb-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-200 mb-1 truncate">{student.name}</h1>
+                <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-slate-400 text-sm mb-2">
                   <span>{student.email}</span>
                   <span className="hidden md:inline">|</span>
-                  <span>Phone: <span className="font-medium text-gray-800">{student.phoneNumber}</span></span>
+                  <span>Phone: <span className="font-medium text-gray-800 dark:text-slate-200">{student.phoneNumber}</span></span>
                   <span className="hidden md:inline">|</span>
-                  <span>CF: <span className="font-mono text-blue-600 font-medium">{student.codeforcesHandle}</span></span>
+                  <span>CF: <span className="font-mono text-blue-600 dark:text-blue-400 font-medium">{student.codeforcesHandle}</span></span>
                   <span className="hidden md:inline">|</span>
-                  <span>Enrolled: <span className="font-medium text-gray-800">{formatDate(student.enrollmentDate)}</span></span>
+                  <span>Enrolled: <span className="font-medium text-gray-800 dark:text-slate-200">{formatDate(student.enrollmentDate)}</span></span>
                 </div>
                 {/* Ratings moved here */}
                 <div className="flex items-center gap-8 mt-2 mb-2">
                   <div className="text-center">
                     <div className={`text-4xl font-bold ${getRatingColor(student.currentRating)} mb-1`}>{student.currentRating}</div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide">Current</div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide">Current</div>
                     <div className={`text-sm font-medium ${getRatingColor(student.maxRating)} mt-1`}>Max: {student.maxRating}</div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Last Activity:</span>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">Last Activity:</span>
                       <span className={`text-xs font-medium ${inactivityStatus.color}`}>{student.lastSubmissionDate ? formatDate(student.lastSubmissionDate) : 'Unknown'}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Data Updated:</span>
-                      <span className={`text-xs font-medium ${student.lastDataSync ? 'text-green-600' : 'text-red-600'}`}>{formatDataFreshness(student.lastDataSync)}</span>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">Data Updated:</span>
+                      <span className={`text-xs font-medium ${student.lastDataSync ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatDataFreshness(student.lastDataSync)}</span>
                     </div>
                   </div>
                 </div>
@@ -306,7 +306,7 @@ const StudentProfile = () => {
                   <button
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className={`px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium flex items-center gap-2 ${refreshing ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
+                    className={`px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-800 transition-all duration-200 text-sm font-medium flex items-center gap-2 ${refreshing ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
                   >
                     <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -316,7 +316,7 @@ const StudentProfile = () => {
                   <button
                     onClick={handleSendReminder}
                     disabled={sendingReminder || student.emailRemindersDisabled}
-                    className={`px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-all duration-200 text-sm font-medium flex items-center gap-2 ${(sendingReminder || student.emailRemindersDisabled) ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
+                    className={`px-4 py-2 rounded-lg bg-amber-600 dark:bg-amber-700 text-white hover:bg-amber-700 dark:hover:bg-amber-800 transition-all duration-200 text-sm font-medium flex items-center gap-2 ${(sendingReminder || student.emailRemindersDisabled) ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -325,17 +325,17 @@ const StudentProfile = () => {
                   </button>
                 </div>
                 <div className="flex items-center gap-3 mt-2">
-                  <div className={`text-xs font-semibold px-2 py-1 rounded ${inactivityStatus.color === 'text-green-600' ? 'bg-green-100 text-green-700' : inactivityStatus.color === 'text-amber-600' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{inactivityStatus.text}</div>
-                  <div className="text-xs text-blue-700 font-semibold px-2 py-1 bg-blue-50 rounded">Reminders: {student.reminderEmailCount || 0}</div>
+                  <div className={`text-xs font-semibold px-2 py-1 rounded ${inactivityStatus.color === 'text-green-600' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : inactivityStatus.color === 'text-amber-600' ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300' : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'}`}>{inactivityStatus.text}</div>
+                  <div className="text-xs text-blue-700 dark:text-blue-300 font-semibold px-2 py-1 bg-blue-50 dark:bg-blue-900 rounded">Reminders: {student.reminderEmailCount || 0}</div>
                   <button
                     onClick={handleToggleReminders}
-                    className={`text-xs px-2 py-1 rounded font-medium transition-all duration-200 ${student.emailRemindersDisabled ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                    className={`text-xs px-2 py-1 rounded font-medium transition-all duration-200 ${student.emailRemindersDisabled ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800' : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800'}`}
                   >
                     {student.emailRemindersDisabled ? 'Enable Reminders' : 'Disable Reminders'}
                   </button>
                 </div>
                 {student.lastReminderSent && (
-                  <div className="text-xs text-gray-500 mt-1">Last Reminder: {formatDate(student.lastReminderSent)}</div>
+                  <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">Last Reminder: {formatDate(student.lastReminderSent)}</div>
                 )}
               </div>
             </div>
@@ -344,19 +344,19 @@ const StudentProfile = () => {
 
         {/* Contest History Section */}
         <div
-          className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 rounded-lg overflow-hidden transition-all duration-700 transform ${animateContest ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border-4 border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-700 transform ${animateContest ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
-          <div className="px-6 py-5 border-b border-gray-200">
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Contest History</h2>
-                <p className="text-gray-600 text-sm mt-1">{contests.length} contests participated</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-200">Contest History</h2>
+                <p className="text-gray-600 dark:text-slate-400 text-sm mt-1">{contests.length} contests participated</p>
               </div>
               <div className="flex items-center gap-3">
                 <select
                   value={contestFilter}
                   onChange={(e) => setContestFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200"
                 >
                   <option value={30}>Last 30 days</option>
                   <option value={90}>Last 90 days</option>
@@ -364,7 +364,7 @@ const StudentProfile = () => {
                 </select>
                 <button
                   onClick={() => setShowContestModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors font-medium"
                 >
                   View All Contests
                 </button>
@@ -377,8 +377,8 @@ const StudentProfile = () => {
             </div>
           ) : contests.length > 0 ? (
             <div>
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <div className="rounded-lg border-2 border-blue-300 bg-white p-4 shadow-sm">
+              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                <div className="rounded-lg border-2 border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={prepareRatingChartData()}>
@@ -402,31 +402,31 @@ const StudentProfile = () => {
             </div>
           ) : (
             <div className="px-6 py-12 text-center">
-              <div className="text-gray-400 mb-2">
+              <div className="text-gray-400 dark:text-slate-500 mb-2">
                 <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <p className="text-gray-500">No contest history available</p>
+              <p className="text-gray-500 dark:text-slate-400">No contest history available</p>
             </div>
           )}
         </div>
 
         {/* Problem Solving Section */}
         <div
-          className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 rounded-lg overflow-hidden transition-all duration-700 transform ${animateProblem ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border-4 border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-700 transform ${animateProblem ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
-          <div className="px-6 py-5 border-b border-gray-200">
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Problem Solving Activity</h2>
-                <p className="text-gray-600 text-sm mt-1">{problems.length} problems solved recently</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-200">Problem Solving Activity</h2>
+                <p className="text-gray-600 dark:text-slate-400 text-sm mt-1">{problems.length} problems solved recently</p>
               </div>
               <div className="flex items-center gap-3">
                 <select
                   value={problemFilter}
                   onChange={(e) => setProblemFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200"
                 >
                   <option value={7}>Last 7 days</option>
                   <option value={30}>Last 30 days</option>
@@ -435,7 +435,7 @@ const StudentProfile = () => {
                 </select>
                 <button
                   onClick={() => setShowProblemModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors font-medium"
                 >
                   View All Problems
                 </button>
@@ -452,25 +452,25 @@ const StudentProfile = () => {
               <div className="flex flex-col md:flex-row gap-4">
                 {/* Left: Problem Stats Card */}
                 <div className="md:w-1/3 p-0">
-                  <div className="border-2 border-blue-300 rounded-lg bg-blue-50 p-6 h-full shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
-                    <h3 className="text-lg font-semibold text-blue-900 mb-4">Problem Stats</h3>
+                  <div className="border-2 border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-gray-900 p-6 h-full shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4">Problem Stats</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Total Solved:</span>
-                        <span className="text-xl font-bold text-blue-600">{statistics.totalProblems || 0}</span>
+                        <span className="text-gray-700 dark:text-slate-300">Total Solved:</span>
+                        <span className="text-xl font-bold text-blue-600 dark:text-blue-400">{statistics.totalProblems || 0}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Avg Rating:</span>
-                        <span className="text-lg font-semibold text-gray-900">{statistics.averageRating || 0}</span>
+                        <span className="text-gray-700 dark:text-slate-300">Avg Rating:</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-slate-200">{statistics.averageRating || 0}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Per Day:</span>
-                        <span className="text-lg font-semibold text-gray-900">{statistics.averageProblemsPerDay || 0}</span>
+                        <span className="text-gray-700 dark:text-slate-300">Per Day:</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-slate-200">{statistics.averageProblemsPerDay || 0}</span>
                       </div>
                       {statistics.mostDifficultProblem && (
                         <div className="flex justify-between items-center mt-2">
-                          <span className="flex items-center gap-2 text-gray-700">
-                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <span className="flex items-center gap-2 text-gray-700 dark:text-slate-300">
+                            <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
                             </svg>
                             <span className="font-semibold">Hardest Problem:</span>
@@ -478,13 +478,13 @@ const StudentProfile = () => {
                               href={`https://codeforces.com/problemset/problem/${statistics.mostDifficultProblem.contestId}/${statistics.mostDifficultProblem.problemIndex}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-700 hover:text-blue-900 font-medium truncate max-w-[120px]"
+                              className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 font-medium truncate max-w-[120px]"
                               title={statistics.mostDifficultProblem.problemName}
                             >
                               {statistics.mostDifficultProblem.problemName}
                             </a>
                           </span>
-                          <span className="text-lg font-bold text-amber-700 ml-4">{statistics.mostDifficultProblem.rating}</span>
+                          <span className="text-lg font-bold text-amber-700 dark:text-amber-400 ml-4">{statistics.mostDifficultProblem.rating}</span>
                         </div>
                       )}
                     </div>
@@ -492,7 +492,7 @@ const StudentProfile = () => {
                 </div>
                 {/* Right: Bar Graph */}
                 <div className="md:w-2/3 p-0 flex items-center justify-center">
-                  <div className="border-2 border-blue-300 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+                  <div className="border-2 border-blue-300 dark:border-blue-700 rounded-lg bg-gray-50 dark:bg-gray-900 p-6 w-full h-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                     {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 ? (
                       <div className="w-full h-40">
                         <ResponsiveContainer width="100%" height="100%">
@@ -521,15 +521,15 @@ const StudentProfile = () => {
                         </ResponsiveContainer>
                       </div>
                     ) : (
-                      <div className="text-gray-400 text-center w-full">No rating distribution data</div>
+                      <div className="text-gray-400 dark:text-slate-500 text-center w-full">No rating distribution data</div>
                     )}
                   </div>
                 </div>
               </div>
               {/* Heatmap - Smallest with Legend */}
-              <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-                <div className="border-2 border-blue-300 rounded-lg bg-white p-2 flex items-center shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Activity Heatmap ({new Date().getFullYear()})</h3>
+              <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                <div className="border-2 border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 p-2 flex items-center shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-200 mb-2">Activity Heatmap ({new Date().getFullYear()})</h3>
                   {heatmapLoading ? (
                     <div className="flex justify-center py-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -552,19 +552,19 @@ const StudentProfile = () => {
                       />
                     </div>
                   ) : (
-                    <div className="text-gray-400 text-center py-1 text-sm">No activity data available</div>
+                    <div className="text-gray-400 dark:text-slate-500 text-center py-1 text-sm">No activity data available</div>
                   )}
                 </div>
               </div>
             </div>
           ) : (
             <div className="px-6 py-12 text-center">
-              <div className="text-gray-400 mb-2">
+              <div className="text-gray-400 dark:text-slate-500 mb-2">
                 <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <p className="text-gray-500">No problem solving data available</p>
+              <p className="text-gray-500 dark:text-slate-400">No problem solving data available</p>
             </div>
           )}
         </div>

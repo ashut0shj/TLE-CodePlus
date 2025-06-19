@@ -216,7 +216,7 @@ const StudentTable = () => {
               </thead>
               <tbody>
                 {sortedStudents.map((student, index) => {
-                  let rowClass = 'bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800';
+                  let rowClass = 'bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900';
                   if (!student.lastSubmissionDate) {
                     rowClass = 'bg-red-100 dark:bg-red-900';
                   } else {

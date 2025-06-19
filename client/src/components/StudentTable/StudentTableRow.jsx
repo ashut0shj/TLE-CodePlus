@@ -14,7 +14,12 @@ const getRatingColor = (rating) => {
 const StudentTableRow = ({ student, rowClass, handleEditStudent, handleDeleteStudent }) => (
   <tr className={`${rowClass} border-b border-gray-300 dark:border-gray-700 hover:shadow-sm hover:scale-[1.01] transition-all duration-150`}>
     <td className="px-5 py-3 border-r border-gray-100 dark:border-gray-800">
-      <div className="font-medium text-slate-800 dark:text-slate-200">{student.name}</div>
+      <Link
+        to={`/student/${student._id}`}
+        className="font-medium text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors duration-150"
+      >
+        {student.name}
+      </Link>
     </td>
     <td className="px-5 py-3 border-r border-gray-100 dark:border-gray-800">
       <div className="text-slate-600 dark:text-slate-300">{student.email}</div>
