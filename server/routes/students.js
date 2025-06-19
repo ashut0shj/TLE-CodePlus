@@ -7,7 +7,7 @@ const {
   updateStudent,
   deleteStudent,
   getStudentContestHistory,
-  getStudentProblemData,
+  getProblemData,
   exportStudentsCSV,
   refreshStudentData,
   toggleEmailReminders,

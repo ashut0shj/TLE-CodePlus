@@ -21,6 +21,8 @@ const StudentProfile = () => {
   const [sendingReminder, setSendingReminder] = useState(false);
   const [heatmapData, setHeatmapData] = useState([]);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
+  const [showAllContests, setShowAllContests] = useState(false);
+  const [showAllProblems, setShowAllProblems] = useState(false);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -65,9 +67,8 @@ const StudentProfile = () => {
   const fetchHeatmapData = useCallback(async () => {
     try {
       setHeatmapLoading(true);
-      // Get data from beginning of current year to now for comprehensive heatmap
       const currentYear = new Date().getFullYear();
-      const startOfYear = new Date(currentYear, 0, 1); // January 1st of current year
+      const startOfYear = new Date(currentYear, 0, 1);
       const daysFromStartOfYear = Math.ceil((new Date() - startOfYear) / (1000 * 60 * 60 * 24));
       
       const response = await axios.get(`${API_BASE_URL}/students/${id}/heatmap?days=${daysFromStartOfYear}`);
@@ -94,19 +95,13 @@ const StudentProfile = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      console.log('Refreshing Codeforces data for student:', id);
-      const response = await axios.post(`${API_BASE_URL}/students/${id}/refresh`);
-      console.log('Refresh response:', response.data);
-      
-      // Reload all data
+      await axios.post(`${API_BASE_URL}/students/${id}/refresh`);
       await fetchStudentData();
       await fetchContestHistory();
       await fetchProblemData();
       await fetchHeatmapData();
-      
       alert('Codeforces data refreshed successfully!');
     } catch (err) {
-      console.error('Refresh error:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to refresh Codeforces data';
       alert(`Error: ${errorMessage}`);
     } finally {
@@ -119,10 +114,9 @@ const StudentProfile = () => {
       await axios.patch(`${API_BASE_URL}/students/${id}/reminders`, {
         emailRemindersDisabled: !student.emailRemindersDisabled
       });
-      await fetchStudentData(); // Refresh student data
+      await fetchStudentData();
       alert(`Email reminders ${!student.emailRemindersDisabled ? 'disabled' : 'enabled'} successfully!`);
     } catch (err) {
-      console.error('Error toggling reminders:', err);
       alert('Failed to update email reminder settings');
     }
   };
@@ -136,16 +130,10 @@ const StudentProfile = () => {
     if (window.confirm(`Send a reminder email to ${student.name} (${student.email})?`)) {
       try {
         setSendingReminder(true);
-        const response = await axios.post(`${API_BASE_URL}/students/${id}/send-reminder`);
-        
-        if (response.status === 200) {
-          alert(`Reminder sent successfully to ${student.name}!`);
-          await fetchStudentData(); // Refresh to update reminder count
-        } else {
-          alert('Failed to send reminder email.');
-        }
+        await axios.post(`${API_BASE_URL}/students/${id}/send-reminder`);
+        alert(`Reminder sent successfully to ${student.name}!`);
+        await fetchStudentData();
       } catch (err) {
-        console.error('Error sending reminder:', err);
         const errorMessage = err.response?.data?.message || 'Failed to send reminder email';
         alert(`Error: ${errorMessage}`);
       } finally {
@@ -156,12 +144,12 @@ const StudentProfile = () => {
 
   const getRatingColor = (rating) => {
     if (rating >= 2400) return 'text-red-600 font-bold';
-    if (rating >= 2100) return 'text-orange-600 font-bold';
+    if (rating >= 2100) return 'text-amber-600 font-bold';
     if (rating >= 1900) return 'text-purple-600 font-bold';
     if (rating >= 1600) return 'text-blue-600 font-bold';
     if (rating >= 1400) return 'text-cyan-600 font-bold';
     if (rating >= 1200) return 'text-green-600 font-bold';
-    return 'text-gray-600';
+    return 'text-slate-600';
   };
 
   const formatDate = (dateString) => {
@@ -170,13 +158,12 @@ const StudentProfile = () => {
 
   const formatDataFreshness = (lastDataSync) => {
     if (!lastDataSync) return 'Never';
-    
     const now = new Date();
     const lastSync = new Date(lastDataSync);
     const diffInHours = Math.floor((now - lastSync) / (1000 * 60 * 60));
     
     if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
     
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays === 1) return '1 day ago';
@@ -186,16 +173,16 @@ const StudentProfile = () => {
   };
 
   const getInactivityStatus = (lastSubmissionDate) => {
-    if (!lastSubmissionDate) return { status: 'unknown', color: 'text-gray-500', text: 'Unknown' };
+    if (!lastSubmissionDate) return { status: 'unknown', color: 'text-slate-500', text: 'Unknown' };
     
     const daysSinceLastSubmission = Math.floor((new Date() - new Date(lastSubmissionDate)) / (1000 * 60 * 60 * 24));
     
     if (daysSinceLastSubmission <= 7) {
       return { status: 'active', color: 'text-green-600', text: 'Active' };
     } else if (daysSinceLastSubmission <= 14) {
-      return { status: 'warning', color: 'text-yellow-600', text: `${daysSinceLastSubmission} days inactive` };
+      return { status: 'warning', color: 'text-amber-600', text: `${daysSinceLastSubmission}d inactive` };
     } else {
-      return { status: 'inactive', color: 'text-red-600', text: `${daysSinceLastSubmission} days inactive` };
+      return { status: 'inactive', color: 'text-red-600', text: `${daysSinceLastSubmission}d inactive` };
     }
   };
 
@@ -241,91 +228,98 @@ const StudentProfile = () => {
   const inactivityStatus = getInactivityStatus(student.lastSubmissionDate);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <Link to="/" className="text-blue-600 hover:text-blue-800 mb-2 inline-block">
-            ← Back to Students
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-800">{student.name}</h1>
-          <p className="text-gray-600">{student.email}</p>
-        </div>
-        <div className="text-right space-y-2">
-          <div className={`text-2xl font-bold ${getRatingColor(student.currentRating)}`}>
-            {student.currentRating}
+    <div className="space-y-6">
+      {/* Compact Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              ← Back
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{student.name}</h1>
+              <p className="text-gray-600 text-sm">{student.email}</p>
+            </div>
           </div>
-          <div className="text-sm text-gray-500">Current Rating</div>
-          <div className={`text-lg ${getRatingColor(student.maxRating)}`}>
-            Max: {student.maxRating}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className={`px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors ${refreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {refreshing ? 'Refreshing...' : 'Refresh CF Data'}
-            </button>
-            <button
-              onClick={handleSendReminder}
-              disabled={sendingReminder || student.emailRemindersDisabled}
-              className={`px-4 py-2 rounded bg-orange-600 text-white hover:bg-orange-700 transition-colors ${(sendingReminder || student.emailRemindersDisabled) ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {sendingReminder ? 'Sending...' : 'Send Reminder'}
-            </button>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className={`text-3xl font-bold ${getRatingColor(student.currentRating)}`}>
+                {student.currentRating}
+              </div>
+              <div className="text-xs text-gray-500">Current Rating</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className={`px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium ${refreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+              <button
+                onClick={handleSendReminder}
+                disabled={sendingReminder || student.emailRemindersDisabled}
+                className={`px-3 py-1.5 rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors text-sm font-medium ${(sendingReminder || student.emailRemindersDisabled) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {sendingReminder ? 'Sending...' : 'Remind'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Student Info */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Student Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <span className="font-medium">Phone:</span> {student.phoneNumber}
-          </div>
-          <div>
-            <span className="font-medium">Codeforces Handle:</span> {student.codeforcesHandle}
-          </div>
-          <div>
-            <span className="font-medium">Enrollment Date:</span> {formatDate(student.enrollmentDate)}
-          </div>
-          <div>
-            <span className="font-medium">Last Activity:</span> 
-            <span className={`ml-2 font-semibold ${inactivityStatus.color}`}>
-              {student.lastSubmissionDate ? formatDate(student.lastSubmissionDate) : 'Unknown'}
-            </span>
-          </div>
-          <div>
-            <span className="font-medium">Data Last Updated:</span> 
-            <span className={`ml-2 font-semibold ${student.lastDataSync ? 'text-green-600' : 'text-red-600'}`}>
-              {formatDataFreshness(student.lastDataSync)}
-            </span>
+      {/* Student Info & Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Student Info */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Student Information</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="font-medium text-gray-700">Phone:</span> 
+              <span className="text-gray-600">{student.phoneNumber}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="font-medium text-gray-700">CF Handle:</span> 
+              <span className="text-blue-600 font-mono">{student.codeforcesHandle}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="font-medium text-gray-700">Enrollment:</span> 
+              <span className="text-gray-600">{formatDate(student.enrollmentDate)}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="font-medium text-gray-700">Last Activity:</span> 
+              <span className={`font-semibold ${inactivityStatus.color}`}>
+                {student.lastSubmissionDate ? formatDate(student.lastSubmissionDate) : 'Unknown'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="font-medium text-gray-700">Data Updated:</span> 
+              <span className={`font-semibold ${student.lastDataSync ? 'text-green-600' : 'text-red-600'}`}>
+                {formatDataFreshness(student.lastDataSync)}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Inactivity Management */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Activity & Reminders</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className={`text-2xl font-bold ${inactivityStatus.color}`}>
-              {inactivityStatus.text}
+        {/* Activity & Reminders */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Activity & Reminders</h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Status:</span>
+              <span className={`font-semibold ${inactivityStatus.color}`}>
+                {inactivityStatus.text}
+              </span>
             </div>
-            <div className="text-sm text-gray-600 mt-1">Activity Status</div>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">
-              {student.reminderEmailCount || 0}
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Reminders Sent:</span>
+              <span className="font-semibold text-blue-600">
+                {student.reminderEmailCount || 0}
+              </span>
             </div>
-            <div className="text-sm text-gray-600 mt-1">Reminders Sent</div>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
             <button
               onClick={handleToggleReminders}
-              className={`px-4 py-2 rounded font-semibold ${
+              className={`w-full px-3 py-2 rounded text-sm font-medium transition-colors ${
                 student.emailRemindersDisabled 
                   ? 'bg-red-100 text-red-700 hover:bg-red-200' 
                   : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -333,32 +327,86 @@ const StudentProfile = () => {
             >
               {student.emailRemindersDisabled ? 'Enable Reminders' : 'Disable Reminders'}
             </button>
-            <div className="text-sm text-gray-600 mt-1">Email Reminders</div>
+            {student.lastReminderSent && (
+              <div className="text-xs text-gray-600 text-center">
+                Last: {formatDate(student.lastReminderSent)}
+              </div>
+            )}
           </div>
         </div>
-        {student.lastReminderSent && (
-          <div className="mt-4 text-sm text-gray-600">
-            Last reminder sent: {formatDate(student.lastReminderSent)}
+
+        {/* Quick Stats & Hardest Problem */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Quick Stats</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="text-gray-700">Contests:</span>
+              <span className="font-semibold text-gray-900">{contests.length}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="text-gray-700">Problems Solved:</span>
+              <span className="font-semibold text-gray-900">{statistics.totalProblems || 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="text-gray-700">Avg Rating:</span>
+              <span className="font-semibold text-gray-900">{statistics.averageRating || 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-gray-100">
+              <span className="text-gray-700">Problems/Day:</span>
+              <span className="font-semibold text-gray-900">{statistics.averageProblemsPerDay || 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-gray-700">Max Rating:</span>
+              <span className={`font-semibold ${getRatingColor(student.maxRating)}`}>
+                {student.maxRating}
+              </span>
+            </div>
           </div>
-        )}
-        {student.emailRemindersDisabled && (
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> Email reminders are currently disabled for this student. 
-              Enable them first to send manual reminders.
-            </p>
+          
+          {/* Hardest Problem Section */}
+          <div className="mt-4 pt-3 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">🏆 Hardest Problem</h3>
+            {statistics.mostDifficultProblem ? (
+              <div className="space-y-2">
+                <a
+                  href={`https://codeforces.com/problemset/problem/${statistics.mostDifficultProblem.contestId}/${statistics.mostDifficultProblem.problemIndex}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm block truncate"
+                  title={statistics.mostDifficultProblem.problemName}
+                >
+                  {statistics.mostDifficultProblem.problemName}
+                </a>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Rating:</span>
+                  <span className="text-lg font-bold text-amber-600">
+                    {statistics.mostDifficultProblem.rating}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 text-center">
+                  {formatDate(statistics.mostDifficultProblem.solvedDate)}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-2">
+                <div className="text-sm">No problems solved yet</div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Contest History Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Contest History</h2>
+      {/* Contest History */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold text-gray-900">Contest History</h2>
+            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">({contests.length} contests)</span>
+          </div>
           <select
             value={contestFilter}
             onChange={(e) => setContestFilter(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-md"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value={30}>Last 30 days</option>
             <option value={90}>Last 90 days</option>
@@ -371,60 +419,85 @@ const StudentProfile = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : contests.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Compact Rating Chart */}
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={prepareRatingChartData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="rating" stroke="#3b82f6" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Line type="monotone" dataKey="rating" stroke="#3b82f6" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            
+            {/* Contest Table */}
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Contest</th>
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Old Rating</th>
-                    <th className="text-left py-2">New Rating</th>
-                    <th className="text-left py-2">Change</th>
-                    <th className="text-left py-2">Rank</th>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contest</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Old</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">New</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {contests.map((contest, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="py-2">{contest.contestName}</td>
-                      <td className="py-2">{formatDate(contest.contestDate)}</td>
-                      <td className="py-2">{contest.oldRating}</td>
-                      <td className="py-2">{contest.newRating}</td>
-                      <td className={`py-2 ${contest.ratingChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {contests.slice(0, showAllContests ? contests.length : 5).map((contest, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{contest.contestName}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(contest.contestDate)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{contest.oldRating}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{contest.newRating}</td>
+                      <td className={`px-4 py-3 whitespace-nowrap text-sm font-semibold ${contest.ratingChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {contest.ratingChange >= 0 ? '+' : ''}{contest.ratingChange}
                       </td>
-                      <td className="py-2">{contest.rank}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{contest.rank}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            
+            {/* View All Button - Under Table */}
+            {contests.length > 5 && (
+              <div className="text-center">
+                <button
+                  onClick={() => setShowAllContests(!showAllContests)}
+                  className="px-6 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  {showAllContests ? `Show Less (5 of ${contests.length})` : `View All (${contests.length} contests)`}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-gray-500 text-center py-8">No contest history available.</p>
         )}
       </div>
 
-      {/* Problem Solving Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Problem Solving</h2>
+      {/* Problem Solving */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold text-gray-900">Problem Solving</h2>
+            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">({problems.length} problems)</span>
+          </div>
           <select
             value={problemFilter}
             onChange={(e) => setProblemFilter(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-md"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
@@ -433,14 +506,11 @@ const StudentProfile = () => {
           </select>
         </div>
 
-        {/* Filter Summary */}
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="text-sm text-gray-600">
-            Showing data for the last <span className="font-semibold">{problemFilter} days</span>
-            {problems.length > 0 && (
-              <span> • <span className="font-semibold">{problems.length} problems</span> solved</span>
-            )}
-          </div>
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+          Showing data for the last <span className="font-semibold">{problemFilter} days</span>
+          {problems.length > 0 && (
+            <span> • <span className="font-semibold">{problems.length} problems</span> solved</span>
+          )}
         </div>
 
         {problemLoading ? (
@@ -449,75 +519,53 @@ const StudentProfile = () => {
           </div>
         ) : problems.length > 0 ? (
           <div className="space-y-6">
-            {/* Statistics */}
+            {/* Statistics Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <div className="text-2xl font-bold text-blue-600">{statistics.totalProblems}</div>
-                <div className="text-sm text-gray-600">Problems Solved</div>
+                <div className="text-sm text-blue-800">Problems Solved</div>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-100">
                 <div className="text-2xl font-bold text-green-600">{statistics.averageRating}</div>
-                <div className="text-sm text-gray-600">Avg Rating</div>
+                <div className="text-sm text-green-800">Avg Rating</div>
               </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-100">
                 <div className="text-2xl font-bold text-purple-600">{statistics.averageProblemsPerDay}</div>
-                <div className="text-sm text-gray-600">Problems/Day</div>
+                <div className="text-sm text-purple-800">Problems/Day</div>
               </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">
+              <div className="text-center p-4 bg-amber-50 rounded-lg border border-amber-100">
+                <div className="text-2xl font-bold text-amber-600">
                   {statistics.mostDifficultProblem?.rating || 0}
                 </div>
-                <div className="text-sm text-gray-600">Hardest Problem</div>
+                <div className="text-sm text-amber-800">Hardest Problem</div>
               </div>
             </div>
-
-            {/* Most Difficult Problem Details */}
-            {statistics.mostDifficultProblem && (
-              <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
-                <h4 className="font-semibold text-orange-800 mb-2">🏆 Most Difficult Problem Solved</h4>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <a
-                      href={`https://codeforces.com/problemset/problem/${statistics.mostDifficultProblem.contestId}/${statistics.mostDifficultProblem.problemIndex}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      {statistics.mostDifficultProblem.problemName}
-                    </a>
-                    <div className="text-sm text-gray-600 mt-1">
-                      Solved on {formatDate(statistics.mostDifficultProblem.solvedDate)}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {statistics.mostDifficultProblem.rating}
-                    </div>
-                    <div className="text-sm text-gray-600">Rating</div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Rating Distribution Chart */}
             {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold mb-3">Rating Distribution</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Rating Distribution</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={prepareRatingBucketsData()}>
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis 
                         dataKey="bucket" 
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
                         angle={-45}
                         textAnchor="end"
                         height={80}
                       />
-                      <YAxis />
+                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
                       <Tooltip 
                         formatter={(value, name) => [value, 'Problems']}
                         labelFormatter={(label) => `Rating ${label}`}
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
                       />
                       <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -528,13 +576,9 @@ const StudentProfile = () => {
 
             {/* Activity Heatmap */}
             <div>
-              <h3 className="text-lg font-semibold mb-3">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
                 Activity Heatmap ({new Date().getFullYear()})
               </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                📅 Shows all activity from the beginning of {new Date().getFullYear()}. 
-                Statistics above are filtered by the selected time period.
-              </p>
               {heatmapLoading ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -554,38 +598,38 @@ const StudentProfile = () => {
                   }}
                 />
               ) : (
-                <p className="text-gray-500 text-center py-8">No activity data available for the heatmap.</p>
+                <p className="text-gray-500 text-center py-8">No activity data available.</p>
               )}
             </div>
 
             {/* Problems Table */}
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Problem</th>
-                    <th className="text-left py-2">Rating</th>
-                    <th className="text-left py-2">Tags</th>
-                    <th className="text-left py-2">Solved Date</th>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Problem</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solved</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {problems.map((problem, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="py-2">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {problems.slice(0, showAllProblems ? problems.length : 10).map((problem, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
                         <a
                           href={`https://codeforces.com/problemset/problem/${problem.contestId}/${problem.problemIndex}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm"
                         >
                           {problem.problemName}
                         </a>
                       </td>
-                      <td className="py-2">{problem.rating || 'N/A'}</td>
-                      <td className="py-2">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{problem.rating || 'N/A'}</td>
+                      <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
-                          {problem.tags?.slice(0, 3).map((tag, tagIndex) => (
+                          {problem.tags?.slice(0, 2).map((tag, tagIndex) => (
                             <span
                               key={tagIndex}
                               className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
@@ -593,17 +637,29 @@ const StudentProfile = () => {
                               {tag}
                             </span>
                           ))}
-                          {problem.tags?.length > 3 && (
-                            <span className="text-gray-500 text-xs">+{problem.tags.length - 3} more</span>
+                          {problem.tags?.length > 2 && (
+                            <span className="text-gray-500 text-xs">+{problem.tags.length - 2}</span>
                           )}
                         </div>
                       </td>
-                      <td className="py-2">{formatDate(problem.solvedDate)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(problem.solvedDate)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            
+            {/* View All Button - Under Table */}
+            {problems.length > 10 && (
+              <div className="text-center">
+                <button
+                  onClick={() => setShowAllProblems(!showAllProblems)}
+                  className="px-6 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  {showAllProblems ? `Show Less (10 of ${problems.length})` : `View All (${problems.length} problems)`}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-gray-500 text-center py-8">No problem solving data available.</p>

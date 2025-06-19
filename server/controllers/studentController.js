@@ -314,12 +314,35 @@ const getProblemData = async (req, res) => {
       ratingBuckets[bucketKey] = (ratingBuckets[bucketKey] || 0) + 1;
     });
 
-    // Sort rating buckets by rating
+    // Sort rating buckets by rating and add descriptive labels
     const sortedRatingBuckets = {};
     Object.keys(ratingBuckets)
       .sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]))
       .forEach(key => {
-        sortedRatingBuckets[key] = ratingBuckets[key];
+        const [start, end] = key.split('-');
+        const startRating = parseInt(start);
+        let label = key;
+        
+        // Add descriptive labels for common rating ranges
+        if (startRating >= 800 && startRating <= 1199) {
+          label = `${key} (Newbie)`;
+        } else if (startRating >= 1200 && startRating <= 1399) {
+          label = `${key} (Pupil)`;
+        } else if (startRating >= 1400 && startRating <= 1599) {
+          label = `${key} (Specialist)`;
+        } else if (startRating >= 1600 && startRating <= 1899) {
+          label = `${key} (Expert)`;
+        } else if (startRating >= 1900 && startRating <= 2099) {
+          label = `${key} (Candidate Master)`;
+        } else if (startRating >= 2100 && startRating <= 2299) {
+          label = `${key} (Master)`;
+        } else if (startRating >= 2300 && startRating <= 2399) {
+          label = `${key} (International Master)`;
+        } else if (startRating >= 2400) {
+          label = `${key} (Grandmaster)`;
+        }
+        
+        sortedRatingBuckets[label] = ratingBuckets[key];
       });
 
     res.json({
