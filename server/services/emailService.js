@@ -8,7 +8,7 @@ const createTransporter = () => {
     return null;
   }
 
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail', // or your email provider
     auth: {
       user: process.env.EMAIL_USER,
