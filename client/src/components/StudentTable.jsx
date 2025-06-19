@@ -225,6 +225,7 @@ const StudentTable = () => {
                   <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Email</th>
                   <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Phone</th>
                   <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Handle</th>
+                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Last Sync</th>
                   <th onClick={() => handleSort('currentRating')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
                     Current ⥯ {sortConfig.key === 'currentRating' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                   </th>
@@ -274,6 +275,11 @@ const StudentTable = () => {
                             {student.codeforcesHandle}
                           </a>
                         </div>
+                      </td>
+                      <td className="px-5 py-3 border-r border-gray-100">
+                        <span className="text-xs text-slate-500">
+                          {student.lastDataSync ? new Date(student.lastDataSync).toLocaleDateString() : 'Never'}
+                        </span>
                       </td>
                       <td className="px-5 py-3 border-r border-gray-100">
                         <span className={`font-mono ${getRatingColor(student.currentRating)}`}>
