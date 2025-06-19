@@ -1,9 +1,17 @@
 # TLE CodePlus - Student Progress Management System
 
+
+- **Walkthrough Video:** [https://drive.google.com/file/d/1qmWsmpT6ouuzN-rjlaXYkKhqNGnsrh9i/view?usp=sharing](https://drive.google.com/file/d/1qmWsmpT6ouuzN-rjlaXYkKhqNGnsrh9i/view?usp=sharing)
+
+- **Report:** [https://drive.google.com/file/d/1qHKUdQNb2PtuWzJxjNg_5vUhCcPKfgt_/view?usp=sharing](https://drive.google.com/file/d/1qHKUdQNb2PtuWzJxjNg_5vUhCcPKfgt_/view?usp=sharing)
+
+
 ## 🚀 Live Demo
 
 - **Frontend:** [https://tle-code-plus.vercel.app/](https://tle-code-plus.vercel.app/)
 - **Backend API:** [https://tle-codeplus.onrender.com/](https://tle-codeplus.onrender.com/)
+
+
 
 A modern MERN stack application for managing and tracking student progress in competitive programming, with deep Codeforces integration, beautiful UI, and full dark mode support.
 
