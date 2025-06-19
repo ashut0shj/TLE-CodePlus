@@ -186,7 +186,7 @@ const StudentProfile = () => {
 
   const getInactivityStatus = (lastSubmissionDate) => {
     if (!lastSubmissionDate) return { status: 'unknown', color: 'text-slate-500', text: 'Unknown' };
-
+    
     const now = new Date();
     const last = new Date(lastSubmissionDate);
     const daysSinceLastSubmission = Math.floor((now - last) / (1000 * 60 * 60 * 24));

@@ -11,13 +11,12 @@ const StudentTable = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [inactivityStats, setInactivityStats] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
   useEffect(() => {
     fetchStudents();
-    fetchInactivityStats();
   }, []);
 
   const fetchStudents = async () => {
@@ -31,15 +30,6 @@ const StudentTable = () => {
       console.error('Error fetching students:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchInactivityStats = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/students/stats/inactivity`);
-      setInactivityStats(response.data);
-    } catch (err) {
-      console.error('Error fetching inactivity stats:', err);
     }
   };
 
@@ -58,7 +48,6 @@ const StudentTable = () => {
       try {
         await axios.delete(`${API_BASE_URL}/students/${studentId}`);
         fetchStudents();
-        fetchInactivityStats();
       } catch (err) {
         setError('Failed to delete student');
         console.error('Error deleting student:', err);
@@ -75,11 +64,19 @@ const StudentTable = () => {
       }
       setShowModal(false);
       fetchStudents();
-      fetchInactivityStats();
     } catch (err) {
       setError(editingStudent ? 'Failed to update student' : 'Failed to add student');
       console.error('Error submitting student:', err);
     }
+  };
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
   };
 
   const filteredStudents = students.filter(student =>
@@ -89,6 +86,23 @@ const StudentTable = () => {
     (student.phoneNumber && student.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const sortedStudents = [...filteredStudents].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    let aValue = a[sortConfig.key];
+    let bValue = b[sortConfig.key];
+    if (sortConfig.key === 'name') {
+      aValue = aValue?.toLowerCase() || '';
+      bValue = bValue?.toLowerCase() || '';
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    } else {
+      aValue = aValue || 0;
+      bValue = bValue || 0;
+      return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+  });
+
   const getRatingColor = (rating) => {
     if (rating >= 2400) return 'text-red-600 font-semibold';
     if (rating >= 2100) return 'text-amber-600 font-semibold';
@@ -97,17 +111,6 @@ const StudentTable = () => {
     if (rating >= 1400) return 'text-cyan-600 font-semibold';
     if (rating >= 1200) return 'text-green-600 font-semibold';
     return 'text-slate-600';
-  };
-
-  const getInactivityStatus = (lastSubmissionDate) => {
-    if (!lastSubmissionDate) return { status: 'unknown' };
-    const now = new Date();
-    const last = new Date(lastSubmissionDate);
-    const daysSinceLastSubmission = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-    if (daysSinceLastSubmission < 0) return { status: 'unknown' };
-    if (daysSinceLastSubmission < 4) return { status: 'active' };
-    if (daysSinceLastSubmission < 7) return { status: 'warning' };
-    return { status: 'inactive' };
   };
 
   if (loading) {
@@ -213,60 +216,55 @@ const StudentTable = () => {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Handle</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Current</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Max</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+            <table className="w-full font-sans">
+              <thead>
+                <tr className="bg-slate-50 border-b-2 border-blue-200">
+                  <th onClick={() => handleSort('name')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
+                    Name ⥯{sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Email</th>
+                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Phone</th>
+                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase">Handle</th>
+                  <th onClick={() => handleSort('currentRating')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
+                    Current ⥯ {sortConfig.key === 'currentRating' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('maxRating')} className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide border-r border-blue-100 last:border-r-0 uppercase cursor-pointer select-none">
+                    Max ⥯ {sortConfig.key === 'maxRating' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th className="px-5 py-3 text-left text-base font-bold text-blue-900 tracking-wide uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredStudents.map((student) => {
-                  const inactivityStatus = getInactivityStatus(student.lastSubmissionDate);
+              <tbody>
+                {sortedStudents.map((student, index) => {
+                  let rowClass = 'bg-gradient-to-b from-gray-50 via-white to-gray-50';
+                  if (!student.lastSubmissionDate) {
+                    rowClass = 'bg-red-100';
+                  } else {
+                    const now = new Date();
+                    const last = new Date(student.lastSubmissionDate);
+                    const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+                    if (days > 7) {
+                      rowClass = 'bg-red-100';
+                    } else if (days > 4) {
+                      rowClass = 'bg-amber-100';
+                    }
+                  }
                   return (
                     <tr
                       key={student._id}
-                      className={`hover:bg-blue-50 transition-colors duration-200
-                        ${(() => {
-                          if (!student.lastSubmissionDate) return 'bg-red-50';
-                          const now = new Date();
-                          const last = new Date(student.lastSubmissionDate);
-                          const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-                          if (days > 7) return 'bg-red-50';
-                          if (days > 4) return 'bg-amber-50';
-                          return '';
-                        })()}`}
+                      className={`${rowClass} border-b border-gray-300 hover:shadow-sm hover:scale-[1.01] transition-all duration-150`}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 border-r border-gray-100">
                         <div className="font-medium text-slate-800">{student.name}</div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 border-r border-gray-100">
                         <div className="text-slate-600">{student.email}</div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 border-r border-gray-100">
                         <div className="text-slate-600">{student.phoneNumber}</div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 border-r border-gray-100">
                         <div className="flex items-center gap-2">
-                          {(() => {
-                            if (!student.lastSubmissionDate) return null;
-                            const now = new Date();
-                            const last = new Date(student.lastSubmissionDate);
-                            const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-                            if (days > 7) {
-                              return (
-                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700">
-                                  {days >= 365 ? `${Math.floor(days / 365)}y` : `${days}d`}
-                                </span>
-                              );
-                            }
-                            return null;
-                          })()}
                           <a
                             href={`https://codeforces.com/profile/${student.codeforcesHandle}`}
                             target="_blank"
@@ -277,17 +275,17 @@ const StudentTable = () => {
                           </a>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 border-r border-gray-100">
                         <span className={`font-mono ${getRatingColor(student.currentRating)}`}>
                           {student.currentRating}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 border-r border-gray-100">
                         <span className={`font-mono ${getRatingColor(student.maxRating)}`}>
                           {student.maxRating}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3">
                         <div className="flex gap-2">
                           <Link
                             to={`/student/${student._id}`}
