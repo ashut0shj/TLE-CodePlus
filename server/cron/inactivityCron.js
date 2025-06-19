@@ -1,9 +1,8 @@
 const cron = require('node-cron');
 const { checkInactivityAndSendReminders } = require('../services/inactivityService');
 
-// Schedule inactivity check to run daily at 9:00 AM
 const scheduleInactivityCheck = () => {
-  cron.schedule('0 9 * * *', async () => {
+  cron.schedule('0 2 * * *', async () => {
     console.log('Running scheduled inactivity check...');
     try {
       const results = await checkInactivityAndSendReminders();
@@ -16,7 +15,7 @@ const scheduleInactivityCheck = () => {
     timezone: "Asia/Kolkata" // Adjust timezone as needed
   });
   
-  console.log('Inactivity check scheduled to run daily at 9:00 AM');
+  console.log('Inactivity check scheduled to run daily at 2:00 AM');
 };
 
 // Manual trigger function for testing
