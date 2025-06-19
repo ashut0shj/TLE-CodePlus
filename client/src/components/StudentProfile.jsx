@@ -7,15 +7,26 @@ import 'react-calendar-heatmap/dist/styles.css';
 
 // Modal Component for Contest History
 const ContestModal = ({ isOpen, onClose, contests, contestFilter, setContestFilter }) => {
-  if (!isOpen) return null;
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (isOpen) {
+      setShow(true);
+    } else {
+      // Delay unmount for animation
+      const timeout = setTimeout(() => setShow(false), 400);
+      return () => clearTimeout(timeout);
+    }
+  }, [isOpen]);
+  if (!isOpen && !show) return null;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+    <div className={`fixed inset-0 z-50 p-4 flex items-center justify-center transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute inset-0 bg-black bg-opacity-50 transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onClose}></div>
+      <div className={`relative bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden transition-all duration-500 transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`} style={{zIndex: 10}}>
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Contest History</h2>
@@ -43,7 +54,7 @@ const ContestModal = ({ isOpen, onClose, contests, contestFilter, setContestFilt
         </div>
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="rounded-lg border-2 border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={contests.map(contest => ({
@@ -68,7 +79,7 @@ const ContestModal = ({ isOpen, onClose, contests, contestFilter, setContestFilt
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto border-2 border-gray-200 rounded-lg shadow-md mt-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -102,7 +113,16 @@ const ContestModal = ({ isOpen, onClose, contests, contestFilter, setContestFilt
 
 // Modal Component for Problem Solving
 const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, setProblemFilter }) => {
-  if (!isOpen) return null;
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (isOpen) {
+      setShow(true);
+    } else {
+      const timeout = setTimeout(() => setShow(false), 400);
+      return () => clearTimeout(timeout);
+    }
+  }, [isOpen]);
+  if (!isOpen && !show) return null;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
@@ -127,8 +147,9 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+    <div className={`fixed inset-0 z-50 p-4 flex items-center justify-center transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute inset-0 bg-black bg-opacity-50 transition-all duration-500 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onClose}></div>
+      <div className={`relative bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden transition-all duration-500 transform ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`} style={{zIndex: 10}}>
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Problem Solving Activity</h2>
@@ -160,7 +181,7 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
           <div className="flex flex-col md:flex-row gap-4">
             {/* Left: Problem Stats Card */}
             <div className="md:w-1/3 p-0">
-              <div className="border-2 border-gray-200 rounded-lg bg-blue-50 p-6 h-full shadow-sm">
+              <div className="border-2 border-gray-200 rounded-lg bg-blue-50 p-6 h-full shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                 <h3 className="text-lg font-semibold text-blue-900 mb-4">Problem Stats</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -200,7 +221,7 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
             </div>
             {/* Right: Bar Graph */}
             <div className="md:w-2/3 p-0 flex items-center justify-center">
-              <div className="border-2 border-gray-200 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-sm">
+              <div className="border-2 border-gray-200 rounded-lg bg-gray-50 p-6 w-full h-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                 {statistics.ratingBuckets && Object.keys(statistics.ratingBuckets).length > 0 ? (
                   <div className="w-full h-40">
                     <ResponsiveContainer width="100%" height="100%">
@@ -235,7 +256,7 @@ const ProblemModal = ({ isOpen, onClose, problems, statistics, problemFilter, se
             </div>
           </div>
           {/* Problems Table */}
-          <div className="overflow-x-auto border-2 border-gray-200 rounded-lg shadow-sm mt-4">
+          <div className="overflow-x-auto border-2 border-gray-200 rounded-lg shadow-md mt-4 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
