@@ -29,21 +29,10 @@ git clone <repository-url>
 cd TLE-CodePlus
 ```
 
-### 2. Run the setup script (recommended)
+### 2. Install Dependencies in both cliet and server
 ```bash
-bash setup.sh
+npm install
 ```
-
-Or, run the steps manually:
-
-- Install server dependencies:
-  ```bash
-  cd server && npm install
-  ```
-- Install client dependencies:
-  ```bash
-  cd ../client && npm install
-  ```
 
 ### 3. Configure Environment
 Create a `.env` file in the `server` directory:
