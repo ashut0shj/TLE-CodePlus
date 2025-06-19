@@ -186,14 +186,25 @@ const StudentProfile = () => {
 
   const getInactivityStatus = (lastSubmissionDate) => {
     if (!lastSubmissionDate) return { status: 'unknown', color: 'text-slate-500', text: 'Unknown' };
-    
-    const daysSinceLastSubmission = Math.floor((new Date() - new Date(lastSubmissionDate)) / (1000 * 60 * 60 * 24));
-    
-    if (daysSinceLastSubmission <= 7) {
+
+    const now = new Date();
+    const last = new Date(lastSubmissionDate);
+    const daysSinceLastSubmission = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+
+    if (daysSinceLastSubmission < 0) {
+      return { status: 'unknown', color: 'text-slate-500', text: 'Unknown' };
+    }
+
+    if (daysSinceLastSubmission < 4) {
       return { status: 'active', color: 'text-green-600', text: 'Active' };
-    } else if (daysSinceLastSubmission <= 14) {
+    } else if (daysSinceLastSubmission < 7) {
       return { status: 'warning', color: 'text-amber-600', text: `${daysSinceLastSubmission}d inactive` };
     } else {
+      // If more than a year
+      if (daysSinceLastSubmission >= 365) {
+        const years = Math.floor(daysSinceLastSubmission / 365);
+        return { status: 'inactive', color: 'text-red-600', text: `${years}y inactive` };
+      }
       return { status: 'inactive', color: 'text-red-600', text: `${daysSinceLastSubmission}d inactive` };
     }
   };

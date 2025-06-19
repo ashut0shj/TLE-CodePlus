@@ -11,7 +11,7 @@ const mongoose = require('mongoose');
 const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({ isActive: true })
-      .select('name email phoneNumber codeforcesHandle currentRating maxRating enrollmentDate')
+      .select('name email phoneNumber codeforcesHandle currentRating maxRating enrollmentDate lastSubmissionDate')
       .sort({ name: 1 });
     
     res.json(students);
@@ -79,7 +79,49 @@ const createStudent = async (req, res) => {
     });
 
     const savedStudent = await student.save();
-    res.status(201).json(savedStudent);
+
+    // Fetch problem submissions from Codeforces
+    try {
+      const subRes = await axios.get(`https://codeforces.com/api/user.status?handle=${codeforcesHandle}&from=1&count=10000`);
+      if (subRes.data.status === 'OK') {
+        // Filter only accepted submissions and unique problems
+        const solvedProblemsMap = {};
+        subRes.data.result.forEach(sub => {
+          if (sub.verdict === 'OK') {
+            const key = `${sub.problem.contestId}-${sub.problem.index}`;
+            if (!solvedProblemsMap[key] || solvedProblemsMap[key].creationTimeSeconds < sub.creationTimeSeconds) {
+              solvedProblemsMap[key] = sub;
+            }
+          }
+        });
+        const problems = Object.values(solvedProblemsMap).map(sub => ({
+          studentId: savedStudent._id,
+          problemId: `${sub.problem.contestId}-${sub.problem.index}`,
+          problemName: sub.problem.name,
+          contestId: sub.problem.contestId,
+          problemIndex: sub.problem.index,
+          rating: sub.problem.rating,
+          tags: sub.problem.tags,
+          solvedDate: new Date(sub.creationTimeSeconds * 1000),
+          submissionId: sub.id,
+          verdict: sub.verdict,
+          programmingLanguage: sub.programmingLanguage,
+          timeConsumed: sub.timeConsumedMillis,
+          memoryConsumed: sub.memoryConsumedBytes,
+          points: sub.problem.points || 0
+        }));
+        if (problems.length > 0) {
+          await Problem.insertMany(problems);
+          // Set lastSubmissionDate to the most recent solved problem
+          const latestSolved = problems.reduce((latest, p) => p.solvedDate > latest.solvedDate ? p : latest, problems[0]);
+          await Student.findByIdAndUpdate(savedStudent._id, { lastSubmissionDate: latestSolved.solvedDate });
+        }
+      }
+    } catch (err) {
+      // Ignore errors from Codeforces API for problems
+    }
+
+    res.status(201).json(await Student.findById(savedStudent._id));
   } catch (error) {
     console.error('Error creating student:', error);
     res.status(500).json({ message: 'Error creating student' });
@@ -221,19 +263,13 @@ const updateStudent = async (req, res) => {
   }
 };
 
-// Delete student (soft delete)
+// Delete student (hard delete)
 const deleteStudent = async (req, res) => {
   try {
-    const student = await Student.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { new: true }
-    );
-
+    const student = await Student.findByIdAndDelete(req.params.id);
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
     }
-
     res.json({ message: 'Student deleted successfully' });
   } catch (error) {
     console.error('Error deleting student:', error);
@@ -423,6 +459,15 @@ const refreshStudentData = async (req, res) => {
     
     // Fetch and store problem submissions
     await fetchAndStoreProblemSubmissions(student.codeforcesHandle, id);
+
+    // After fetchAndStoreProblemSubmissions
+    const problems = await Problem.find({ studentId: id }).sort({ solvedDate: -1 });
+    if (problems.length > 0) {
+      await Student.findByIdAndUpdate(id, { lastSubmissionDate: problems[0].solvedDate });
+    } else {
+      // Set lastSubmissionDate to null if no problems
+      await Student.findByIdAndUpdate(id, { lastSubmissionDate: null });
+    }
 
     res.json({
       message: 'Codeforces data refreshed successfully',

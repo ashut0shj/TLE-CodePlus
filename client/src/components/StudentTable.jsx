@@ -99,6 +99,17 @@ const StudentTable = () => {
     return 'text-slate-600';
   };
 
+  const getInactivityStatus = (lastSubmissionDate) => {
+    if (!lastSubmissionDate) return { status: 'unknown' };
+    const now = new Date();
+    const last = new Date(lastSubmissionDate);
+    const daysSinceLastSubmission = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+    if (daysSinceLastSubmission < 0) return { status: 'unknown' };
+    if (daysSinceLastSubmission < 4) return { status: 'active' };
+    if (daysSinceLastSubmission < 7) return { status: 'warning' };
+    return { status: 'inactive' };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -174,22 +185,24 @@ const StudentTable = () => {
             </div>
 
             {/* Stats */}
-            {inactivityStats && (
-              <div className="flex gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-800">{inactivityStats.totalStudents}</div>
-                  <div className="text-sm text-slate-600">Total</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-500">{inactivityStats.inactive7Days}</div>
-                  <div className="text-sm text-slate-600">Inactive 7d+</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-500">{inactivityStats.remindersDisabled}</div>
-                  <div className="text-sm text-slate-600">No Reminders</div>
-                </div>
+            <div className="flex gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-slate-800">{filteredStudents.length}</div>
+                <div className="text-sm text-slate-600">Total</div>
               </div>
-            )}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-500">
+                  {filteredStudents.filter(student => {
+                    if (!student.lastSubmissionDate) return true;
+                    const now = new Date();
+                    const last = new Date(student.lastSubmissionDate);
+                    const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+                    return days > 7;
+                  }).length}
+                </div>
+                <div className="text-sm text-slate-600">Inactive 7d+</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -213,61 +226,92 @@ const StudentTable = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
-                  <tr key={student._id} className="hover:bg-blue-50 transition-colors duration-200">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-slate-800">{student.name}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-slate-600">{student.email}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-slate-600">{student.phoneNumber}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <a
-                        href={`https://codeforces.com/profile/${student.codeforcesHandle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono text-blue-600 hover:underline"
-                      >
-                        {student.codeforcesHandle}
-                      </a>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`font-mono ${getRatingColor(student.currentRating)}`}>
-                        {student.currentRating}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`font-mono ${getRatingColor(student.maxRating)}`}>
-                        {student.maxRating}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/student/${student._id}`}
-                          className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 transition-colors duration-200"
-                        >
-                          View
-                        </Link>
-                        <button
-                          onClick={() => handleEditStudent(student)}
-                          className="px-3 py-1 text-xs font-medium text-slate-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-200"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteStudent(student._id)}
-                          className="px-3 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-full hover:bg-red-100 transition-colors duration-200"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredStudents.map((student) => {
+                  const inactivityStatus = getInactivityStatus(student.lastSubmissionDate);
+                  return (
+                    <tr
+                      key={student._id}
+                      className={`hover:bg-blue-50 transition-colors duration-200
+                        ${(() => {
+                          if (!student.lastSubmissionDate) return 'bg-red-50';
+                          const now = new Date();
+                          const last = new Date(student.lastSubmissionDate);
+                          const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+                          if (days > 7) return 'bg-red-50';
+                          if (days > 4) return 'bg-amber-50';
+                          return '';
+                        })()}`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-800">{student.name}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-slate-600">{student.email}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-slate-600">{student.phoneNumber}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            if (!student.lastSubmissionDate) return null;
+                            const now = new Date();
+                            const last = new Date(student.lastSubmissionDate);
+                            const days = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+                            if (days > 7) {
+                              return (
+                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                                  {days >= 365 ? `${Math.floor(days / 365)}y` : `${days}d`}
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                          <a
+                            href={`https://codeforces.com/profile/${student.codeforcesHandle}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-blue-600 hover:underline"
+                          >
+                            {student.codeforcesHandle}
+                          </a>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`font-mono ${getRatingColor(student.currentRating)}`}>
+                          {student.currentRating}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`font-mono ${getRatingColor(student.maxRating)}`}>
+                          {student.maxRating}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Link
+                            to={`/student/${student._id}`}
+                            className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            View
+                          </Link>
+                          <button
+                            onClick={() => handleEditStudent(student)}
+                            className="px-3 py-1 text-xs font-medium text-white bg-gray-600 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStudent(student._id)}
+                            className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition-colors duration-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
