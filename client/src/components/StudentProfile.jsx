@@ -29,7 +29,7 @@ const StudentProfile = () => {
   const [animateContest, setAnimateContest] = useState(false);
   const [animateProblem, setAnimateProblem] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:5000/api';
+  const API_BASE_URL = 'https://tle-codeplus.onrender.com/api';
 
   const fetchStudentData = useCallback(async () => {
     try {

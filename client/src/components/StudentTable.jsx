@@ -14,7 +14,7 @@ const StudentTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  const API_BASE_URL = 'http://localhost:5000/api';
+  const API_BASE_URL = 'https://tle-codeplus.onrender.com/api';
 
   useEffect(() => {
     fetchStudents();
