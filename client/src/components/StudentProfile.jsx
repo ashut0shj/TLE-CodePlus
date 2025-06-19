@@ -301,6 +301,9 @@ const StudentProfile = () => {
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [showContestModal, setShowContestModal] = useState(false);
   const [showProblemModal, setShowProblemModal] = useState(false);
+  const [animateHeader, setAnimateHeader] = useState(false);
+  const [animateContest, setAnimateContest] = useState(false);
+  const [animateProblem, setAnimateProblem] = useState(false);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -369,6 +372,13 @@ const StudentProfile = () => {
       fetchHeatmapData();
     }
   }, [student, fetchContestHistory, fetchProblemData, fetchHeatmapData]);
+
+  useEffect(() => {
+    // Staggered animation for sections
+    setTimeout(() => setAnimateHeader(true), 100);
+    setTimeout(() => setAnimateContest(true), 400);
+    setTimeout(() => setAnimateProblem(true), 700);
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -508,7 +518,9 @@ const StudentProfile = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="px-4 py-6 mx-auto space-y-6">
         {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-sm border-2 border-gray-300 rounded-lg overflow-hidden">
+        <div
+          className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 rounded-lg overflow-hidden transition-all duration-700 transform ${animateHeader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
           <div className="px-6 py-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               {/* Left: Main Info */}
@@ -596,7 +608,9 @@ const StudentProfile = () => {
         </div>
 
         {/* Contest History Section */}
-        <div className="bg-white rounded-xl shadow-sm border-2 border-gray-300 rounded-lg overflow-hidden">
+        <div
+          className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 rounded-lg overflow-hidden transition-all duration-700 transform ${animateContest ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
           <div className="px-6 py-5 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
@@ -664,7 +678,9 @@ const StudentProfile = () => {
         </div>
 
         {/* Problem Solving Section */}
-        <div className="bg-white rounded-xl shadow-sm border-2 border-gray-300 rounded-lg overflow-hidden">
+        <div
+          className={`bg-white rounded-xl shadow-lg border-4 border-gray-300 rounded-lg overflow-hidden transition-all duration-700 transform ${animateProblem ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
           <div className="px-6 py-5 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
