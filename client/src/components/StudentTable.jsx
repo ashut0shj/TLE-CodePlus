@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CSVLink } from 'react-csv';
-import StudentModal from './StudentModal.jsx';
+import StudentModal from './StudentTable/StudentModal.jsx';
 import StudentTableHeader from './StudentTable/StudentTableHeader.jsx';
 import StudentTableRow from './StudentTable/StudentTableRow.jsx';
 
