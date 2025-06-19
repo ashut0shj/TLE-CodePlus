@@ -8,29 +8,24 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           
           {/* Logo Section */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200">
-              <img 
-                src="/tle-logo.svg" 
-                alt="TLE CodePlus Logo" 
-                className="h-8 w-auto"
-              />
-              <div className="flex items-center space-x-1">
-                <span className="text-2xl font-bold text-blue-400  tracking-tight">TLE</span>
-                <span className="text-2xl font-bold text-white tracking-tight">CodePlus</span>
-              </div>
-            </Link>
+          <div className="flex items-center space-x-3 group">
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-300" />
+            <div className="relative bg-black rounded-lg p-1.5 border border-gray-700">
+              <img src="/tle-logo.svg" alt="TLE CodePlus Logo" className="h-6 w-6" />
+            </div>
           </div>
+          <div className="flex items-center space-x-1">
+            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent tracking-tight">
+              TLE
+            </span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent tracking-tight">
+              CodePlus
+            </span>
+          </div>
+        </div>
           
-          {/* Navigation Links Section */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              to="/" 
-              className="text-gray-300 hover:text-white font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-800"
-            >
-              Students
-            </Link>
-          </div>
+        
           
           {/* Mobile Menu Button */}
           <div className="md:hidden">
@@ -43,17 +38,7 @@ const Navbar = () => {
           
         </div>
         
-        {/* Mobile Menu */}
-        <div className="md:hidden border-t border-gray-800 py-3">
-          <div className="flex flex-col space-y-2">
-            <Link 
-              to="/" 
-              className="text-gray-300 hover:text-white font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-800 mx-3"
-            >
-              Students
-            </Link>
-          </div>
-        </div>
+  
       </div>
     </nav>
   );
